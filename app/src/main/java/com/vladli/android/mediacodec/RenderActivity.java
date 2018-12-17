@@ -11,6 +11,10 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.vladli.android.mediacodec.tool.CameraDevice;
+import com.vladli.android.mediacodec.tool.SurfaceTextureManager;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /** Created by vladlichonos on 6/5/15. */
@@ -40,10 +44,11 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
   public void surfaceCreated(SurfaceHolder holder) {}
 
   @Override
+  public void onPointerCaptureChanged(boolean hasCapture) {}
+
+  @Override
   public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-    // surface is fully initialized on the activity
-    mDecoder.start();
-    mEncoder.start();
+
   }
 
   @Override
