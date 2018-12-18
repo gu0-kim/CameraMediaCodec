@@ -9,19 +9,26 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /** Created by vladlichonos on 6/5/15. */
-public class VideoDecoder implements VideoCodec {
+public class VideoDecoder implements VideoCodec, DecoderCallBack {
 
   Worker mWorker;
+  private Surface mSurface;
 
+  public VideoDecoder(Surface surface) {
+    this.mSurface = surface;
+  }
+
+  @Override
   public void decodeSample(byte[] data, int offset, int size, long presentationTimeUs, int flags) {
     if (mWorker != null) {
       mWorker.decodeSample(data, offset, size, presentationTimeUs, flags);
     }
   }
 
-  public void configure(Surface surface, int width, int height, byte[] csd0, int offset, int size) {
+  @Override
+  public void configure(int width, int height, byte[] csd0, int offset, int size) {
     if (mWorker != null) {
-      mWorker.configure(surface, width, height, ByteBuffer.wrap(csd0, offset, size));
+      mWorker.configure(mSurface, width, height, ByteBuffer.wrap(csd0, offset, size));
     }
   }
 

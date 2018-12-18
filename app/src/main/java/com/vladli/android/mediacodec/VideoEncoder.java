@@ -29,6 +29,7 @@ public class VideoEncoder implements VideoCodec {
   public void start() {
     if (mWorker == null) {
       mWorker = new Worker();
+      mWorker.prepare();
       mWorker.setRunning(true);
       mWorker.start();
     }
@@ -60,7 +61,6 @@ public class VideoEncoder implements VideoCodec {
 
     @Override
     public void run() {
-      prepare();
       try {
         while (mRunning) {
           encode();
@@ -133,7 +133,7 @@ public class VideoEncoder implements VideoCodec {
       mSurface.release();
     }
 
-    void prepare() {
+    public void prepare() {
       // configure video output
       MediaFormat format = MediaFormat.createVideoFormat(VIDEO_FORMAT, mWidth, mHeight);
       format.setInteger(
