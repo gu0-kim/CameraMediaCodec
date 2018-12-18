@@ -14,8 +14,9 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
   static final int OUTPUT_WIDTH = 640;
   static final int OUTPUT_HEIGHT = 480;
 
-  VideoEncoder mEncoder;
+  EncoderThread mEncoder;
   VideoDecoder mDecoder;
+  WorkThread mWorkThread;
   SurfaceView mSurfaceView;
 
   @Override
@@ -31,7 +32,12 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
 
   @Override
   public void surfaceCreated(SurfaceHolder holder) {
-    new WorkThread(holder.getSurface()).start();
+    mDecoder = new VideoDecoder(holder.getSurface());
+    mDecoder.start();
+    mEncoder = new EncoderThread(mDecoder);
+    mEncoder.start();
+    mWorkThread = new WorkThread(mEncoder.getCodecInputSurface());
+    mWorkThread.start();
   }
 
   @Override
@@ -42,75 +48,10 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
 
   @Override
   public void surfaceDestroyed(SurfaceHolder holder) {
-    //    mEncoder.stop();
-    //    mDecoder.stop();
+    mEncoder.stop();
+    mDecoder.stop();
   }
 
-  //  class MyEncoder extends VideoEncoder {
-  //
-  //    //    SurfaceRenderer mRenderer;
-  //    byte[] mBuffer = new byte[0];
-  //    private CodecInputSurface mCodecInputSurface;
-  //
-  //    public MyEncoder() {
-  //      super(OUTPUT_WIDTH, OUTPUT_HEIGHT);
-  //    }
-  //
-  //    // Both of onSurfaceCreated and onSurfaceDestroyed are called from codec's thread,
-  //    // non-UI thread
-  //
-  //    public CodecInputSurface getCodecInputSurface() {
-  //      return mCodecInputSurface;
-  //    }
-  //
-  //    public void feed2Encoder(SurfaceTexture st) {
-  //      mCodecInputSurface.swapBuffers(st);
-  //    }
-  //
-  //    @Override
-  //    protected void onSurfaceCreated(Surface surface) {
-  //      // surface is created and codec is ready to accept input (Canvas)
-  //      //      mRenderer = new MyRenderer(surface);
-  //      //      mRenderer.start();
-  //      mCodecInputSurface = new CodecInputSurface(surface);
-  //    }
-  //
-  //    @Override
-  //    protected void onSurfaceDestroyed(Surface surface) {
-  //      // need to make sure to block this thread to fully complete drawing cycle
-  //      // otherwise unpredictable exceptions will be thrown (aka IllegalStateException)
-  //      //      mRenderer.stopAndWait();
-  //      //      mRenderer = null;
-  //    }
-  //
-  //    @Override
-  //    protected void onEncodedSample(MediaCodec.BufferInfo info, ByteBuffer data) {
-  //      // Here we could have just used ByteBuffer, but in real life case we might need to
-  //      // send sample over network, etc. This requires byte[]
-  //      if (mBuffer.length < info.size) {
-  //        mBuffer = new byte[info.size];
-  //      }
-  //      data.position(info.offset);
-  //      data.limit(info.offset + info.size);
-  //      data.get(mBuffer, 0, info.size);
-  //
-  //      if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG)
-  //          == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
-  //        // this is the first and only config sample, which contains information about codec
-  //        // like H.264, that let's configure the decoder
-  //        mDecoder.configure(
-  //            mSurfaceView.getHolder().getSurface(),
-  //            OUTPUT_WIDTH,
-  //            OUTPUT_HEIGHT,
-  //            mBuffer,
-  //            0,
-  //            info.size);
-  //      } else {
-  //        // pass byte[] to decoder's queue to render asap
-  //        mDecoder.decodeSample(mBuffer, 0, info.size, info.presentationTimeUs, info.flags);
-  //      }
-  //    }
-  //  }
   //
   //  // All drawing is happening here
   //  // We draw on virtual surface size of 640x480

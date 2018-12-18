@@ -1,7 +1,6 @@
 package com.vladli.android.mediacodec.tool;
 
 import android.graphics.SurfaceTexture;
-import android.view.Surface;
 
 public class WorkThread extends Thread {
   // video output dimension
@@ -12,8 +11,8 @@ public class WorkThread extends Thread {
   private CodecInputSurface mInputSurface;
   private CameraDevice cameraDevice;
 
-  public WorkThread(Surface surface) {
-    mInputSurface = new CodecInputSurface(surface);
+  public WorkThread(CodecInputSurface surface) {
+    mInputSurface = surface;
   }
 
   @Override
