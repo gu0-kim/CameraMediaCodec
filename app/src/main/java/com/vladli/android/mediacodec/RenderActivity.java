@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.os.Bundle;
 import android.text.TextPaint;
@@ -11,10 +12,8 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import com.vladli.android.mediacodec.tool.CameraDevice;
-import com.vladli.android.mediacodec.tool.SurfaceTextureManager;
+import com.vladli.android.mediacodec.tool.CodecInputSurface;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /** Created by vladlichonos on 6/5/15. */
@@ -47,9 +46,7 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
   public void onPointerCaptureChanged(boolean hasCapture) {}
 
   @Override
-  public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-  }
+  public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
 
   @Override
   public void surfaceDestroyed(SurfaceHolder holder) {
@@ -59,8 +56,9 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
 
   class MyEncoder extends VideoEncoder {
 
-    SurfaceRenderer mRenderer;
+    //    SurfaceRenderer mRenderer;
     byte[] mBuffer = new byte[0];
+    private CodecInputSurface mCodecInputSurface;
 
     public MyEncoder() {
       super(OUTPUT_WIDTH, OUTPUT_HEIGHT);
@@ -69,19 +67,28 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
     // Both of onSurfaceCreated and onSurfaceDestroyed are called from codec's thread,
     // non-UI thread
 
+    public CodecInputSurface getCodecInputSurface() {
+      return mCodecInputSurface;
+    }
+
+    public void feed2Encoder(SurfaceTexture st) {
+      mCodecInputSurface.swapBuffers(st);
+    }
+
     @Override
     protected void onSurfaceCreated(Surface surface) {
       // surface is created and codec is ready to accept input (Canvas)
-      mRenderer = new MyRenderer(surface);
-      mRenderer.start();
+      //      mRenderer = new MyRenderer(surface);
+      //      mRenderer.start();
+      mCodecInputSurface = new CodecInputSurface(surface);
     }
 
     @Override
     protected void onSurfaceDestroyed(Surface surface) {
       // need to make sure to block this thread to fully complete drawing cycle
       // otherwise unpredictable exceptions will be thrown (aka IllegalStateException)
-      mRenderer.stopAndWait();
-      mRenderer = null;
+      //      mRenderer.stopAndWait();
+      //      mRenderer = null;
     }
 
     @Override
