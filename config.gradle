@@ -1,0 +1,63 @@
+ext {
+    android = [
+            compileSdkVersion: 27,
+            buildToolsVersion: "28.0.3",
+            minSdkVersion    : 15,
+            targetSdkVersion : 27,
+            versionCode      : 1,
+            versionName      : "1.0"
+    ]
+
+    version = [
+            androidSupportSdkVersion   : "27.1.1",
+            dagger2SdkVersion          : "2.15",
+            butterknifeSdkVersion      : "8.4.0",
+            canarySdkVersion           : "1.5.4",
+            xrecyclerviewVersion       : "1.5.9",
+            rxjavaVersion              : "2.1.10",
+            rxandroidVersion           : "2.0.2",
+            rxbindingVersion           : "2.0.0",
+            rxbindingAppcompatV7Version: "2.1.1",
+            adapterRxjava2Version      : "2.3.0",
+            leakcanaryAndroidVersion   : "1.5.4",
+            constraintLayoutVersion    : "1.0.2",
+            runnerVersion              : "1.0.1",
+            espressoCoreVersion        : "3.0.1",
+            junitVersion               : "4.12",
+            retrofitVerion             : "2.3.0",
+            convertergsonVersion       : "2.3.0",
+    ]
+
+    dependencies = [
+            //test
+            "junit"                   : "junit:junit:${version["junitVersion"]}",
+            "runner"                  : "com.android.support.test:runner:${version["runnerVersion"]}",
+            "espresso-core"           : "com.android.support.test.espresso:espresso-core:${version["espressoCoreVersion"]}",
+
+            "butterknife"             : "com.jakewharton:butterknife:${version["butterknifeSdkVersion"]}",
+            "butterknife-compiler"    : "com.jakewharton:butterknife-compiler:${version["butterknifeSdkVersion"]}",
+
+            "dagger"                  : "com.google.dagger:dagger:${version["dagger2SdkVersion"]}",
+            "dagger-compiler"         : "com.google.dagger:dagger-compiler:${version["dagger2SdkVersion"]}",
+
+            "xrecyclerview"           : "com.jcodecraeer:xrecyclerview:${version["xrecyclerviewVersion"]}",
+            "recyclerview-v7"         : "com.android.support:recyclerview-v7:${version["androidSupportSdkVersion"]}",
+            "appcompat-v7"            : "com.android.support:appcompat-v7:${version["androidSupportSdkVersion"]}",
+            "constraint-layout"       : "com.android.support.constraint:constraint-layout:${version["constraintLayoutVersion"]}",
+            "support-v4"              : "com.android.support:support-v4:${version["androidSupportSdkVersion"]}",
+            "design"                  : "com.android.support:design:${version["androidSupportSdkVersion"]}",
+
+            "rxjava"                  : "io.reactivex.rxjava2:rxjava:${version["rxjavaVersion"]}",
+            "rxandroid"               : "io.reactivex.rxjava2:rxandroid:${version["rxandroidVersion"]}",
+            "adapter-rxjava2"         : "com.squareup.retrofit2:adapter-rxjava2:${version["adapterRxjava2Version"]}",
+
+            "rxbinding"               : "com.jakewharton.rxbinding2:rxbinding:${version["rxbindingVersion"]}",
+            "rxbinding-appcompat-v7"  : "com.jakewharton.rxbinding2:rxbinding-appcompat-v7:${version["rxbindingAppcompatV7Version"]}",
+
+            "retrofit"                : "com.squareup.retrofit2:retrofit:${version["retrofitVerion"]}",
+            "converter-gson"          : "com.squareup.retrofit2:converter-gson:${version["convertergsonVersion"]}",
+
+            "leakcanary-android"      : "com.squareup.leakcanary:leakcanary-android:${version["leakcanaryAndroidVersion"]}",
+            "leakcanary-android-no-op": "com.squareup.leakcanary:leakcanary-android-no-op:${version["leakcanaryAndroidVersion"]}"
+    ]
+}

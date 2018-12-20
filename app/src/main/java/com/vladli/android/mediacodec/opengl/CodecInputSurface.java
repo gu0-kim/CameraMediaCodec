@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec.tool;
+package com.vladli.android.mediacodec.opengl;
 
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;

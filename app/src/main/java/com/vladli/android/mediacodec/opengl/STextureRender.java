@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec.tool;
+package com.vladli.android.mediacodec.opengl;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;

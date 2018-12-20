@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec;
+package com.vladli.android.mediacodec.mediacodec;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
@@ -8,24 +8,22 @@ import android.view.Surface;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-/** Created by vladlichonos on 6/5/15. */
-public class VideoDecoder implements VideoCodec, DecoderCallBack {
+import static com.vladli.android.mediacodec.mediacodec.CodecParams.TIMEOUT_SEC;
 
-  Worker mWorker;
+public class VideoDecoder {
+  private DecoderThread mWorker;
   private Surface mSurface;
 
   public VideoDecoder(Surface surface) {
     this.mSurface = surface;
   }
 
-  @Override
   public void decodeSample(byte[] data, int offset, int size, long presentationTimeUs, int flags) {
     if (mWorker != null) {
       mWorker.decodeSample(data, offset, size, presentationTimeUs, flags);
     }
   }
 
-  @Override
   public void configure(int width, int height, byte[] csd0, int offset, int size) {
     if (mWorker != null) {
       mWorker.configure(mSurface, width, height, ByteBuffer.wrap(csd0, offset, size));
@@ -34,7 +32,7 @@ public class VideoDecoder implements VideoCodec, DecoderCallBack {
 
   public void start() {
     if (mWorker == null) {
-      mWorker = new Worker();
+      mWorker = new DecoderThread();
       mWorker.setRunning(true);
       mWorker.start();
     }
@@ -47,16 +45,11 @@ public class VideoDecoder implements VideoCodec, DecoderCallBack {
     }
   }
 
-  class Worker extends Thread {
+  class DecoderThread extends Thread {
 
     volatile boolean mRunning;
     MediaCodec mCodec;
     volatile boolean mConfigured;
-    long mTimeoutUs;
-
-    public Worker() {
-      mTimeoutUs = 10000l;
-    }
 
     public void setRunning(boolean running) {
       mRunning = running;
@@ -66,12 +59,12 @@ public class VideoDecoder implements VideoCodec, DecoderCallBack {
       if (mConfigured) {
         throw new IllegalStateException("Decoder is already configured");
       }
-      MediaFormat format = MediaFormat.createVideoFormat(VIDEO_FORMAT, width, height);
+      MediaFormat format = MediaFormat.createVideoFormat(CodecParams.VIDEO_FORMAT, width, height);
       // little tricky here, csd-0 is required in order to configure the codec properly
       // it is basically the first sample from encoder with flag: BUFFER_FLAG_CODEC_CONFIG
       format.setByteBuffer("csd-0", csd0);
       try {
-        mCodec = MediaCodec.createDecoderByType(VIDEO_FORMAT);
+        mCodec = MediaCodec.createDecoderByType(CodecParams.VIDEO_FORMAT);
       } catch (IOException e) {
         throw new RuntimeException("Failed to create codec", e);
       }
@@ -84,7 +77,7 @@ public class VideoDecoder implements VideoCodec, DecoderCallBack {
     public void decodeSample(
         byte[] data, int offset, int size, long presentationTimeUs, int flags) {
       if (mConfigured && mRunning) {
-        int index = mCodec.dequeueInputBuffer(mTimeoutUs);
+        int index = mCodec.dequeueInputBuffer(TIMEOUT_SEC);
         if (index >= 0) {
           ByteBuffer buffer;
           // since API 21 we have new API to use
@@ -108,7 +101,7 @@ public class VideoDecoder implements VideoCodec, DecoderCallBack {
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         while (mRunning) {
           if (mConfigured) {
-            int index = mCodec.dequeueOutputBuffer(info, mTimeoutUs);
+            int index = mCodec.dequeueOutputBuffer(info, TIMEOUT_SEC);
             if (index >= 0) {
               // setting true is telling system to render frame onto Surface
               mCodec.releaseOutputBuffer(index, true);

@@ -1,22 +1,38 @@
-package com.vladli.android.mediacodec.tool;
+package com.vladli.android.mediacodec;
 
 import android.graphics.SurfaceTexture;
+import android.media.MediaCodec;
+import android.view.Surface;
 
-public class WorkThread extends Thread {
-  // video output dimension
-  private static final int OUTPUT_WIDTH = 640;
-  private static final int OUTPUT_HEIGHT = 480;
+import com.vladli.android.mediacodec.camera.CameraDevice;
+import com.vladli.android.mediacodec.mediacodec.VideoDecoder;
+import com.vladli.android.mediacodec.mediacodec.VideoEncoder;
+import com.vladli.android.mediacodec.opengl.CodecInputSurface;
+import com.vladli.android.mediacodec.opengl.SurfaceTextureManager;
+
+import static com.vladli.android.mediacodec.mediacodec.CodecParams.OUTPUT_HEIGHT;
+import static com.vladli.android.mediacodec.mediacodec.CodecParams.OUTPUT_WIDTH;
+
+public class Camera2OpenGLPreviewTask extends Thread implements VideoEncoder.EncoderCallback {
+
   private SurfaceTextureManager mStManager;
   private static final long DURATION_SEC = 8; // 8 seconds of video
-  private CodecInputSurface mInputSurface;
   private CameraDevice cameraDevice;
 
-  public WorkThread(CodecInputSurface surface) {
-    mInputSurface = surface;
+  private VideoEncoder mEncoder;
+  private VideoDecoder mDecoder;
+
+  public Camera2OpenGLPreviewTask(Surface outputSurface) {
+    mDecoder = new VideoDecoder(outputSurface);
+    mEncoder = new VideoEncoder(OUTPUT_WIDTH, OUTPUT_HEIGHT);
+    mEncoder.setCallback(this);
   }
 
   @Override
   public void run() {
+    mDecoder.start();
+    mEncoder.start();
+    CodecInputSurface mInputSurface = mEncoder.getCodecInputSurface();
 
     cameraDevice = new CameraDevice();
     cameraDevice.prepareCamera(OUTPUT_WIDTH, OUTPUT_HEIGHT);
@@ -47,6 +63,8 @@ public class WorkThread extends Thread {
       // release everything we grabbed
       releaseCamera();
       releaseSurfaceTexture();
+      mEncoder.stop();
+      mDecoder.stop();
     }
   }
   /** Stops camera preview, and releases the camera to the system. */
@@ -61,6 +79,19 @@ public class WorkThread extends Thread {
     if (mStManager != null) {
       mStManager.release();
       mStManager = null;
+    }
+  }
+
+  // 编码器编码一帧数据结束回调
+  @Override
+  public void onEncoderDataReady(byte[] data, MediaCodec.BufferInfo info) {
+    if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
+      // this is the first and only config sample, which contains information about codec
+      // like H.264, that let's configure the decoder
+      mDecoder.configure(OUTPUT_WIDTH, OUTPUT_HEIGHT, data, 0, info.size);
+    } else {
+      // pass byte[] to decoder's queue to render asap
+      mDecoder.decodeSample(data, 0, info.size, info.presentationTimeUs, info.flags);
     }
   }
 }

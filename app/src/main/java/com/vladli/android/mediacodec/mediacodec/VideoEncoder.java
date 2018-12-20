@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec;
+package com.vladli.android.mediacodec.mediacodec;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -6,29 +6,61 @@ import android.media.MediaFormat;
 import android.os.Build;
 import android.view.Surface;
 
+import com.vladli.android.mediacodec.opengl.CodecInputSurface;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-/** Created by vladlichonos on 6/5/15. */
-public class VideoEncoder implements VideoCodec {
+import static com.vladli.android.mediacodec.mediacodec.CodecParams.TIMEOUT_SEC;
 
-  Worker mWorker;
-  int mWidth, mHeight;
+public class VideoEncoder {
+
+  public interface EncoderCallback {
+    void onEncoderDataReady(byte[] data, MediaCodec.BufferInfo info);
+  }
+
+  private CodecInputSurface mCodecInputSurface;
+  private EncoderCallback mCallback;
+  private EncoderThread mWorker;
+  private int mWidth, mHeight;
+  private byte[] mBuffer = new byte[0];
 
   public VideoEncoder(int width, int height) {
     mWidth = width;
     mHeight = height;
   }
 
-  protected void onSurfaceCreated(Surface surface) {}
+  public void setCallback(EncoderCallback callback) {
+    this.mCallback = callback;
+  }
 
-  protected void onSurfaceDestroyed(Surface surface) {}
+  public CodecInputSurface getCodecInputSurface() {
+    return mCodecInputSurface;
+  }
 
-  protected void onEncodedSample(MediaCodec.BufferInfo info, ByteBuffer data) {}
+  private void onSurfaceCreated(Surface surface) {
+    mCodecInputSurface = new CodecInputSurface(surface);
+  }
+
+  private void onSurfaceDestroyed(Surface surface) {}
+
+  private void onEncodeFrame(MediaCodec.BufferInfo info, ByteBuffer data) {
+    // Here we could have just used ByteBuffer, but in real life case we might need to
+    // send sample over network, etc. This requires byte[]
+    if (mCallback != null) {
+      if (mBuffer.length < info.size) {
+        mBuffer = new byte[info.size];
+      }
+      data.position(info.offset);
+      data.limit(info.offset + info.size);
+      data.get(mBuffer, 0, info.size);
+      mCallback.onEncoderDataReady(mBuffer, info);
+    }
+  }
 
   public void start() {
     if (mWorker == null) {
-      mWorker = new Worker();
+      mWorker = new EncoderThread();
       mWorker.prepare();
       mWorker.setRunning(true);
       mWorker.start();
@@ -42,17 +74,15 @@ public class VideoEncoder implements VideoCodec {
     }
   }
 
-  class Worker extends Thread {
+  class EncoderThread extends Thread {
 
     MediaCodec.BufferInfo mBufferInfo;
     MediaCodec mCodec;
     volatile boolean mRunning;
     Surface mSurface;
-    final long mTimeoutUsec;
 
-    public Worker() {
+    EncoderThread() {
       mBufferInfo = new MediaCodec.BufferInfo();
-      mTimeoutUsec = 10000l;
     }
 
     public void setRunning(boolean running) {
@@ -83,7 +113,7 @@ public class VideoEncoder implements VideoCodec {
         for (; ; ) {
           // MediaCodec is asynchronous, that's why we have a blocking check
           // to see if we have something to do
-          int status = mCodec.dequeueOutputBuffer(mBufferInfo, mTimeoutUsec);
+          int status = mCodec.dequeueOutputBuffer(mBufferInfo, TIMEOUT_SEC);
           if (status == MediaCodec.INFO_TRY_AGAIN_LATER) {
             if (!mRunning) break;
           } else if (status == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
@@ -95,7 +125,7 @@ public class VideoEncoder implements VideoCodec {
             data.limit(mBufferInfo.offset + mBufferInfo.size);
             final int endOfStream = mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM;
             // pass to whoever listens to
-            if (endOfStream == 0) onEncodedSample(mBufferInfo, data);
+            if (endOfStream == 0) onEncodeFrame(mBufferInfo, data);
             // releasing buffer is important
             mCodec.releaseOutputBuffer(status, false);
             if (endOfStream == MediaCodec.BUFFER_FLAG_END_OF_STREAM) break;
@@ -103,7 +133,7 @@ public class VideoEncoder implements VideoCodec {
         }
       } else {
         for (; ; ) {
-          int status = mCodec.dequeueOutputBuffer(mBufferInfo, mTimeoutUsec);
+          int status = mCodec.dequeueOutputBuffer(mBufferInfo, TIMEOUT_SEC);
           if (status == MediaCodec.INFO_TRY_AGAIN_LATER) {
             if (!mRunning) break;
           } else if (status >= 0) {
@@ -112,7 +142,7 @@ public class VideoEncoder implements VideoCodec {
             if (data != null) {
               final int endOfStream = mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM;
               // pass to whoever listens to
-              if (endOfStream == 0) onEncodedSample(mBufferInfo, data);
+              if (endOfStream == 0) onEncodeFrame(mBufferInfo, data);
               // releasing buffer is important
               mCodec.releaseOutputBuffer(status, false);
               if (endOfStream == MediaCodec.BUFFER_FLAG_END_OF_STREAM) break;
@@ -127,23 +157,22 @@ public class VideoEncoder implements VideoCodec {
       // otherwise unexpected exceptions can happen, since we working in multiple threads
       // simultaneously
       onSurfaceDestroyed(mSurface);
-
       mCodec.stop();
       mCodec.release();
       mSurface.release();
     }
 
-    public void prepare() {
+    void prepare() {
       // configure video output
-      MediaFormat format = MediaFormat.createVideoFormat(VIDEO_FORMAT, mWidth, mHeight);
+      MediaFormat format = MediaFormat.createVideoFormat(CodecParams.VIDEO_FORMAT, mWidth, mHeight);
       format.setInteger(
           MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
-      format.setInteger(MediaFormat.KEY_BIT_RATE, VIDEO_BITRATE);
-      format.setInteger(MediaFormat.KEY_FRAME_RATE, VIDEO_FRAME_PER_SECOND);
-      format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, VIDEO_I_FRAME_INTERVAL);
+      format.setInteger(MediaFormat.KEY_BIT_RATE, CodecParams.VIDEO_BITRATE);
+      format.setInteger(MediaFormat.KEY_FRAME_RATE, CodecParams.VIDEO_FRAME_PER_SECOND);
+      format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, CodecParams.VIDEO_I_FRAME_INTERVAL);
 
       try {
-        mCodec = MediaCodec.createEncoderByType(VIDEO_FORMAT);
+        mCodec = MediaCodec.createEncoderByType(CodecParams.VIDEO_FORMAT);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
