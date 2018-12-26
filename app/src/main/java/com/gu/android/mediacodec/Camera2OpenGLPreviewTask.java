@@ -1,17 +1,17 @@
-package com.vladli.android.mediacodec;
+package com.gu.android.mediacodec;
 
 import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.view.Surface;
 
-import com.vladli.android.mediacodec.camera.CameraDevice;
-import com.vladli.android.mediacodec.mediacodec.VideoDecoder;
-import com.vladli.android.mediacodec.mediacodec.VideoEncoder;
-import com.vladli.android.mediacodec.opengl.CodecInputSurface;
-import com.vladli.android.mediacodec.opengl.SurfaceTextureManager;
+import com.gu.android.mediacodec.camera.CameraDevice;
+import com.gu.android.mediacodec.mediacodec.VideoDecoder;
+import com.gu.android.mediacodec.mediacodec.VideoEncoder;
+import com.gu.android.mediacodec.opengl.CodecInputSurface;
+import com.gu.android.mediacodec.opengl.SurfaceTextureManager;
 
-import static com.vladli.android.mediacodec.mediacodec.CodecParams.OUTPUT_HEIGHT;
-import static com.vladli.android.mediacodec.mediacodec.CodecParams.OUTPUT_WIDTH;
+import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_HEIGHT;
+import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_WIDTH;
 
 public class Camera2OpenGLPreviewTask extends Thread implements VideoEncoder.EncoderCallback {
 

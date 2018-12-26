@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec.mediacodec;
+package com.gu.android.mediacodec.mediacodec;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
@@ -8,7 +8,7 @@ import android.view.Surface;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static com.vladli.android.mediacodec.mediacodec.CodecParams.TIMEOUT_SEC;
+import static com.gu.android.mediacodec.mediacodec.CodecParams.TIMEOUT_SEC;
 
 public class VideoDecoder {
   private DecoderThread mWorker;

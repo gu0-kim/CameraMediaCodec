@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec.mediacodec;
+package com.gu.android.mediacodec.mediacodec;
 
 public class CodecParams {
   public static final String VIDEO_FORMAT = "video/avc";

@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec.opengl;
+package com.gu.android.mediacodec.opengl;
 
 import android.graphics.SurfaceTexture;
 

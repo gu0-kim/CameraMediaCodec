@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec.camera;
+package com.gu.android.mediacodec.camera;
 
 import android.hardware.Camera;
 import android.util.Log;

@@ -1,4 +1,4 @@
-package com.vladli.android.mediacodec;
+package com.gu.android.mediacodec;
 
 import android.app.Activity;
 import android.os.Bundle;
