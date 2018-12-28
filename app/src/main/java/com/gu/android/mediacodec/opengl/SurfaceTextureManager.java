@@ -12,7 +12,7 @@ public class SurfaceTextureManager implements SurfaceTexture.OnFrameAvailableLis
   private SurfaceTexture mSurfaceTexture;
   private STextureRender mTextureRender;
 
-  private Object mFrameSyncObject = new Object(); // guards mFrameAvailable
+  private final Object mFrameSyncObject = new Object(); // guards mFrameAvailable
   private boolean mFrameAvailable;
 
   /** Creates instances of TextureRender and SurfaceTexture. */
