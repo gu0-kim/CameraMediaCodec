@@ -42,6 +42,8 @@ public class CameraDevice {
     Camera.Parameters parms = mCamera.getParameters();
 
     choosePreviewSize(parms, encWidth, encHeight);
+    parms.set("orientation", "portrait");
+    mCamera.setDisplayOrientation(90);
     // leave the frame rate set to default
     mCamera.setParameters(parms);
 

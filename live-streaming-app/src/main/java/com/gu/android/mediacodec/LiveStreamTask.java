@@ -14,7 +14,7 @@ import com.gu.rtplibrary.rtp.RtpSenderWrapper;
 import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_HEIGHT;
 import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_WIDTH;
 
-public class Camera2OpenGLPreviewTask extends Thread implements VideoEncoder.EncoderCallback {
+public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallback {
 
   private SurfaceTextureManager mStManager;
   private static final long DURATION_SEC = 8; // 8 seconds of video
@@ -29,11 +29,35 @@ public class Camera2OpenGLPreviewTask extends Thread implements VideoEncoder.Enc
   private boolean paused;
   private boolean stopLive;
 
-  public Camera2OpenGLPreviewTask(Surface outputSurface) {
+  public LiveStreamTask(Surface outputSurface) {
     mDecoder = new VideoDecoder(outputSurface);
     mEncoder = new VideoEncoder(OUTPUT_WIDTH, OUTPUT_HEIGHT);
     mEncoder.setCallback(this);
     mRtpSenderWrapper = new RtpSenderWrapper(IP_ADDRESS, PORT, false);
+  }
+
+  public void stopLiveStream() {
+    stopLive = true;
+  }
+
+  public void paused() {
+    paused = true;
+  }
+
+  public void restart() {
+    paused = false;
+  }
+
+  public void triggerStatus() {
+    paused = !paused;
+  }
+
+  public boolean isPaused() {
+    return paused;
+  }
+
+  public boolean isStopLive() {
+    return stopLive;
   }
 
   @Override
@@ -49,11 +73,9 @@ public class Camera2OpenGLPreviewTask extends Thread implements VideoEncoder.Enc
       mStManager = new SurfaceTextureManager();
       cameraDevice.getCamera().setPreviewTexture(mStManager.getSurfaceTexture());
       cameraDevice.getCamera().startPreview();
-      long startWhen = System.nanoTime();
-      long desiredEnd = startWhen + DURATION_SEC * 1000000000L;
       SurfaceTexture st = mStManager.getSurfaceTexture();
 
-      while (System.nanoTime() < desiredEnd) {
+      while (!stopLive) {
         mStManager.awaitNewImage();
         mStManager.drawImage();
         mInputSurface.setPresentationTime(st.getTimestamp());
@@ -72,8 +94,10 @@ public class Camera2OpenGLPreviewTask extends Thread implements VideoEncoder.Enc
       releaseCamera();
       releaseSurfaceTexture();
       mEncoder.stop();
+      mEncoder.setCallback(null);
       mDecoder.stop();
       mInputSurface.release();
+      mRtpSenderWrapper.close();
     }
   }
   /** Stops camera preview, and releases the camera to the system. */
@@ -94,15 +118,14 @@ public class Camera2OpenGLPreviewTask extends Thread implements VideoEncoder.Enc
   // 编码器编码一帧数据结束回调
   @Override
   public void onEncoderDataReady(byte[] data, MediaCodec.BufferInfo info) {
-    //    if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) ==
-    // MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
-    //      // this is the first and only config sample, which contains information about codec
-    //      // like H.264, that let's configure the decoder
-    //      mDecoder.configure(OUTPUT_WIDTH, OUTPUT_HEIGHT, data, 0, info.size);
-    //    } else {
-    //      // pass byte[] to decoder's queue to render asap
-    //      mDecoder.decodeSample(data, 0, info.size, info.presentationTimeUs, info.flags);
-    //    }
-    mRtpSenderWrapper.sendAvcPacket(data, 0, info.size, 0);
+    if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
+      // this is the first and only config sample, which contains information about codec
+      // like H.264, that let's configure the decoder
+      mDecoder.configure(OUTPUT_WIDTH, OUTPUT_HEIGHT, data, 0, info.size);
+    } else if (!paused) {
+      // pass byte[] to decoder's queue to render asap
+      mDecoder.decodeSample(data, 0, info.size, info.presentationTimeUs, info.flags);
+    }
+    if (!paused) mRtpSenderWrapper.sendAvcPacket(data, 0, info.size, 0);
   }
 }

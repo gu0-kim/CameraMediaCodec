@@ -15,7 +15,6 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 
-/** Created by xmc on 2017/7/15. */
 public class ClientTextureView extends TextureView implements TextureView.SurfaceTextureListener {
 
   private static final String MIME_TYPE = "video/avc";
@@ -65,7 +64,6 @@ public class ClientTextureView extends TextureView implements TextureView.Surfac
     DatagramPacket datagramPacket = null;
 
     public PreviewThread(Surface surface, int width, int height) {
-      Log.e(TAG, "PreviewThread: gou zhao");
       try {
         decode = MediaCodec.createDecoderByType(MIME_TYPE);
       } catch (IOException e) {
