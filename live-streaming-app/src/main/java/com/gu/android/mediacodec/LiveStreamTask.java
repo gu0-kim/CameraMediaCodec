@@ -10,6 +10,7 @@ import com.gu.android.mediacodec.mediacodec.VideoEncoder;
 import com.gu.android.mediacodec.opengl.CodecInputSurface;
 import com.gu.android.mediacodec.opengl.SurfaceTextureManager;
 import com.gu.rtplibrary.rtp.RtpSenderWrapper;
+import com.gu.rtplibrary.utils.ByteUtil;
 
 import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_HEIGHT;
 import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_WIDTH;
@@ -28,6 +29,7 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
 
   private boolean paused;
   private boolean stopLive;
+  private byte[] config;
 
   public LiveStreamTask(Surface outputSurface) {
     mDecoder = new VideoDecoder(outputSurface);
@@ -121,7 +123,11 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
     if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
       // this is the first and only config sample, which contains information about codec
       // like H.264, that let's configure the decoder
-      mDecoder.configure(OUTPUT_WIDTH, OUTPUT_HEIGHT, data, 0, info.size);
+      config = new byte[info.size];
+      System.arraycopy(data, 0, config, 0, info.size);
+      ByteUtil.printByte(config);
+      // {,0,0,0,1,103,66,-128,30,-38,2,-128,-10,-128,109,10,19,80,0,0,0,1,104,-50,6,-30}
+      mDecoder.configure(OUTPUT_WIDTH, OUTPUT_HEIGHT, config, 0, info.size);
     } else if (!paused) {
       // pass byte[] to decoder's queue to render asap
       mDecoder.decodeSample(data, 0, info.size, info.presentationTimeUs, info.flags);

@@ -1,1 +1,1 @@
-include ':live-streaming-app', ':clientapp', ':rtplibrary'
+include ':live-streaming-app', ':clientapp', ':rtplibrary', ':basemodule'
