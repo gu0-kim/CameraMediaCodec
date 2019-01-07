@@ -136,7 +136,7 @@ public class Server extends Service {
             for (String ip : peers.keySet()) {
               RtpSenderWrapper wrapper = peers.get(ip);
               if (wrapper != null) {
-                wrapper.sendAacPacket(sendByte, 0, sendByte.length, 0);
+                wrapper.sendAvcPacket(sendByte, 0, sendByte.length, 0);
               }
             }
           }

@@ -18,6 +18,14 @@ public class RtpSenderWrapper {
     }
   }
 
+  /**
+   * 视频发送
+   *
+   * @param data
+   * @param offset
+   * @param size
+   * @param timeUs
+   */
   public void sendAvcPacket(final byte[] data, final int offset, final int size, long timeUs) {
     if (mRtpAvcStream != null) {
       try {
@@ -28,6 +36,14 @@ public class RtpSenderWrapper {
     }
   }
 
+  /**
+   * 音频发送
+   *
+   * @param data
+   * @param offset
+   * @param size
+   * @param timeUs
+   */
   public void sendAacPacket(final byte[] data, final int offset, final int size, long timeUs) {
     if (mRtpAacStream != null) {
       try {
