@@ -1,24 +1,42 @@
 package com.gu.clientapp;
 
 import android.app.Activity;
+import android.graphics.SurfaceTexture;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Surface;
+import android.view.TextureView;
 
-import com.gu.clientapp.view.ClientTextureView;
+import com.example.basemodule.log.LogUtil;
+import com.example.basemodule.utils.inet.INetUtil;
+import com.gu.clientapp.task.ConnectTask;
+import com.gu.clientapp.task.PreviewTask;
+
+import java.net.InetAddress;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
-public class ClientActivity extends Activity implements ClientTextureView.SurfaceCallback {
+public class ClientActivity extends Activity implements TextureView.SurfaceTextureListener {
+  private static final String TAG = ClientActivity.class.getSimpleName();
+
   @BindView(R.id.tv)
-  ClientTextureView tv;
+  TextureView tv;
 
   CompositeDisposable mCompositeDisposable;
+  PreviewTask mPreviewTask;
+  Surface mSurface;
+
+  @OnClick(R.id.start2ConnectRoomBtn)
+  public void onClickedBtn() {
+    connect2LiveRoom(mSurface);
+  }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -26,24 +44,16 @@ public class ClientActivity extends Activity implements ClientTextureView.Surfac
     setContentView(R.layout.client_main);
     ButterKnife.bind(this);
     mCompositeDisposable = new CompositeDisposable();
-    tv.setCallback(this);
+    tv.setSurfaceTextureListener(this);
   }
 
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    tv.setCallback(null);
+    tv.setSurfaceTextureListener(null);
   }
 
-  @Override
-  public void onSurfaceTextureAvailable(Surface surface, int width, int height) {}
-
-  @Override
-  public boolean onSurfaceTextureDestroyed() {
-    return false;
-  }
-
-  private void connect2LiveRoom(Surface surface, int width, int height) {
+  private void connect2LiveRoom(final Surface surface) {
     mCompositeDisposable.add(
         Observable.just(1000)
             .observeOn(Schedulers.newThread())
@@ -51,14 +61,49 @@ public class ClientActivity extends Activity implements ClientTextureView.Surfac
                 new Function<Integer, byte[]>() {
                   @Override
                   public byte[] apply(Integer integer) throws Exception {
-                    return new byte[0];
+                    InetAddress broadcastIP = INetUtil.getBroadcastAddress(getApplication());
+                    InetAddress localIp = InetAddress.getByName(INetUtil.getIP(getApplication()));
+                    LogUtil.log(broadcastIP.getHostAddress());
+                    LogUtil.log(localIp.getHostAddress());
+                    ConnectTask task = new ConnectTask(1000, "gu", broadcastIP, localIp);
+                    return task.start2Connect();
                   }
                 })
-            .subscribe(new Consumer<byte[]>() {
-                @Override
-                public void accept(byte[] configBytes) throws Exception {
-
-                }
-            }));
+            .subscribe(
+                new Consumer<byte[]>() {
+                  @Override
+                  public void accept(byte[] configBytes) throws Exception {
+                    mPreviewTask = new PreviewTask();
+                    printByte(configBytes);
+                    mPreviewTask.configAndStart(surface, 640, 480, configBytes);
+                  }
+                }));
   }
+
+  public static void printByte(byte[] data) {
+    StringBuffer sb = new StringBuffer();
+    sb.append("{");
+    for (byte b : data) {
+      sb.append(",").append(b);
+    }
+    sb.append("}");
+    Log.e(TAG, "--------------------config data =" + sb.toString());
+  }
+
+  @Override
+  public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+    this.mSurface = new Surface(surface);
+  }
+
+  @Override
+  public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+
+  @Override
+  public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+    mPreviewTask.stopPreview();
+    return false;
+  }
+
+  @Override
+  public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
 }

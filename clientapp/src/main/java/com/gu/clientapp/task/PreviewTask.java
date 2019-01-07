@@ -5,13 +5,15 @@ import android.media.MediaFormat;
 import android.util.Log;
 import android.view.Surface;
 
+import com.example.basemodule.log.LogUtil;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 
-import static com.example.basemodule.data.Port.CLIENT_LOCAL_DATA_PORT;
+import static com.example.basemodule.data.Port.CLIENT_DATA_PORT;
 
 public class PreviewTask extends Thread {
   private static final String MIME_TYPE = "video/avc";
@@ -33,6 +35,7 @@ public class PreviewTask extends Thread {
   }
 
   public void configAndStart(Surface surface, int width, int height, byte[] header_sps) {
+    LogUtil.log("configAndStart");
     final MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
     format.setInteger(MediaFormat.KEY_BIT_RATE, 40000);
     format.setInteger(MediaFormat.KEY_FRAME_RATE, 20);
@@ -60,13 +63,14 @@ public class PreviewTask extends Thread {
 
     decode.configure(format, surface, null, 0);
     decode.start();
+    start();
   }
 
   private void socketInit() {
     try {
-      h264Socket = new DatagramSocket(CLIENT_LOCAL_DATA_PORT); // 端口号
+      h264Socket = new DatagramSocket(CLIENT_DATA_PORT); // 端口号
       h264Socket.setReuseAddress(true);
-      h264Socket.setBroadcast(true);
+      h264Socket.setBroadcast(false);
 
     } catch (SocketException e) {
       e.printStackTrace();
@@ -84,13 +88,18 @@ public class PreviewTask extends Thread {
         try {
           datagramPacket = new DatagramPacket(data, data.length);
           h264Socket.receive(datagramPacket); // 接收数据
-          Log.e(TAG, "-------------------客户端受到数据--------------------");
         } catch (IOException e) {
           e.printStackTrace();
         }
       }
       rtpData = datagramPacket.getData();
       if (rtpData != null) {
+        Log.e(
+            TAG,
+            "-------------------客户端受到数据--------------------rtpData[0]="
+                + rtpData[0]
+                + ",rtpData[1]="
+                + rtpData[1]);
         if (rtpData[0] == -128 && rtpData[1] == 96) {
           Log.e(TAG, "run:xxx");
           int l1 = (rtpData[12] << 24) & 0xff000000;
@@ -157,7 +166,7 @@ public class PreviewTask extends Thread {
 
   // 解码h264数据
   private void offerDecoder(byte[] input, int length) {
-    Log.d(TAG, "offerDecoder: ");
+    LogUtil.log("offerDecoder");
     try {
       ByteBuffer[] inputBuffers = decode.getInputBuffers();
       int inputBufferIndex = decode.dequeueInputBuffer(0);
@@ -174,6 +183,7 @@ public class PreviewTask extends Thread {
       MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
 
       int outputBufferIndex = decode.dequeueOutputBuffer(bufferInfo, 0);
+      LogUtil.log("outputBufferIndex=" + outputBufferIndex);
       while (outputBufferIndex >= 0) {
         // If a valid surface was specified when configuring the codec,
         // passing true renders this output buffer to the surface.

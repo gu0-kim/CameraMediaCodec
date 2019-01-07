@@ -9,7 +9,7 @@ import com.gu.android.mediacodec.mediacodec.VideoDecoder;
 import com.gu.android.mediacodec.mediacodec.VideoEncoder;
 import com.gu.android.mediacodec.opengl.CodecInputSurface;
 import com.gu.android.mediacodec.opengl.SurfaceTextureManager;
-import com.gu.rtplibrary.rtp.RtpSenderWrapper;
+import com.gu.android.mediacodec.server.Server.ServiceBinder;
 import com.gu.rtplibrary.utils.ByteUtil;
 
 import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_HEIGHT;
@@ -20,26 +20,29 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
   private SurfaceTextureManager mStManager;
   private static final long DURATION_SEC = 8; // 8 seconds of video
   private CameraDevice cameraDevice;
-  private static final String IP_ADDRESS = "192.168.1.102";
-  private static final int PORT = 5004;
+  //  private static final String IP_ADDRESS = "192.168.1.102";
+  //  private static final int PORT = 5004;
 
   private VideoEncoder mEncoder;
   private VideoDecoder mDecoder;
-  private RtpSenderWrapper mRtpSenderWrapper;
+  //  private RtpSenderWrapper mRtpSenderWrapper;
 
   private boolean paused;
   private boolean stopLive;
   private byte[] config;
+  private ServiceBinder mServiceBinder;
 
-  public LiveStreamTask(Surface outputSurface) {
+  public LiveStreamTask(Surface outputSurface, ServiceBinder serviceBinder) {
     mDecoder = new VideoDecoder(outputSurface);
     mEncoder = new VideoEncoder(OUTPUT_WIDTH, OUTPUT_HEIGHT);
     mEncoder.setCallback(this);
-    mRtpSenderWrapper = new RtpSenderWrapper(IP_ADDRESS, PORT, false);
+    this.mServiceBinder = serviceBinder;
+    //    mRtpSenderWrapper = new RtpSenderWrapper(IP_ADDRESS, PORT, false);
   }
 
   public void stopLiveStream() {
     stopLive = true;
+    mServiceBinder = null;
   }
 
   public void paused() {
@@ -99,7 +102,8 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
       mEncoder.setCallback(null);
       mDecoder.stop();
       mInputSurface.release();
-      mRtpSenderWrapper.close();
+      mServiceBinder = null;
+      //      mRtpSenderWrapper.close();
     }
   }
   /** Stops camera preview, and releases the camera to the system. */
@@ -128,10 +132,14 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
       ByteUtil.printByte(config);
       // {,0,0,0,1,103,66,-128,30,-38,2,-128,-10,-128,109,10,19,80,0,0,0,1,104,-50,6,-30}
       mDecoder.configure(OUTPUT_WIDTH, OUTPUT_HEIGHT, config, 0, info.size);
+      if (mServiceBinder != null) mServiceBinder.saveConfigData(config);
     } else if (!paused) {
       // pass byte[] to decoder's queue to render asap
       mDecoder.decodeSample(data, 0, info.size, info.presentationTimeUs, info.flags);
     }
-    if (!paused) mRtpSenderWrapper.sendAvcPacket(data, 0, info.size, 0);
+    if (!paused && mServiceBinder != null) {
+      mServiceBinder.add2BlockingQueue(data, 0, info.size);
+      //        mRtpSenderWrapper.sendAvcPacket(data, 0, info.size, 0);
+    }
   }
 }

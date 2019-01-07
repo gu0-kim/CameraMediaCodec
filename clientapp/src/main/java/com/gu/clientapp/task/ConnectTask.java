@@ -36,10 +36,10 @@ public class ConnectTask {
     DatagramSocket infoSocket = null;
     byte[] configData;
     try {
-      infoSocket = new DatagramSocket(Port.CLIENT_LOCAL_CONNECT_PORT, localIp);
+      infoSocket = new DatagramSocket(Port.CLIENT_CONNECT_PORT, localIp);
       byte[] data = makeJsonByte();
       DatagramPacket datagramPacket =
-          new DatagramPacket(data, 0, data.length, broadcastIp, Port.SERVER_LOCAL_CONNECT_PORT);
+          new DatagramPacket(data, 0, data.length, broadcastIp, Port.SERVER_CONNECT_PORT);
       infoSocket.send(datagramPacket);
       LogUtil.log("发送请求数据");
       LogUtil.log("等候数据...");

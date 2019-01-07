@@ -1,11 +1,18 @@
 package com.gu.android.mediacodec;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+
+import com.gu.android.mediacodec.server.Server;
+import com.gu.android.mediacodec.server.Server.ServiceBinder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -22,14 +29,29 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
   @BindView(R.id.startBtn)
   Button startBtn;
 
+  private ServiceBinder mServiceBinder;
+  private ServiceConnection mServiceConnection =
+      new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+          mServiceBinder = (ServiceBinder) service;
+          mServiceBinder.setRoomNumber(1000);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {}
+      };
+
   @OnClick(R.id.startBtn)
   public void onClickStartBtn() {
     if (isLiveStream()) {
+      mServiceBinder.stopServer();
       mTask.stopLiveStream();
       mTask = null;
       startBtn.setText(getString(R.string.start_btn_text));
       startOrPauseBtn.setVisibility(View.GONE);
     } else {
+      mServiceBinder.startServer();
       startLiveStream();
       startBtn.setText(getString(R.string.stop_btn_text));
       startOrPauseBtn.setVisibility(View.VISIBLE);
@@ -55,6 +77,14 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
     setContentView(R.layout.layout);
     ButterKnife.bind(this);
     mSurfaceView.getHolder().addCallback(this);
+    Intent service = new Intent(this, Server.class);
+    bindService(service, mServiceConnection, BIND_AUTO_CREATE);
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    unbindService(mServiceConnection);
   }
 
   @Override
@@ -77,7 +107,7 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
 
   private void startLiveStream() {
     if (previewHolder != null && previewHolder.getSurface() != null) {
-      mTask = new LiveStreamTask(previewHolder.getSurface());
+      mTask = new LiveStreamTask(previewHolder.getSurface(), mServiceBinder);
       mTask.start();
     }
   }
