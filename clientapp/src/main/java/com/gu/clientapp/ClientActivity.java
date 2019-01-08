@@ -9,8 +9,8 @@ import android.view.TextureView;
 
 import com.example.basemodule.log.LogUtil;
 import com.example.basemodule.utils.inet.INetUtil;
-import com.gu.clientapp.task.ConnectTask;
 import com.gu.clientapp.task.PreviewTask;
+import com.gu.clientapp.task.socket.ConnectTask;
 
 import java.net.InetAddress;
 
@@ -70,9 +70,9 @@ public class ClientActivity extends Activity implements TextureView.SurfaceTextu
                 new Consumer<byte[]>() {
                   @Override
                   public void accept(byte[] configBytes) throws Exception {
-                    mPreviewTask = new PreviewTask();
+                    mPreviewTask = new PreviewTask(configBytes);
                     printByte(configBytes);
-                    mPreviewTask.configAndStart(surface, 640, 480, configBytes);
+                    mPreviewTask.configAndStart(surface, 640, 480);
                   }
                 }));
   }

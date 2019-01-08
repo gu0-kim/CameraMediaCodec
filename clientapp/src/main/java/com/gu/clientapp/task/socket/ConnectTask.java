@@ -1,4 +1,4 @@
-package com.gu.clientapp.task;
+package com.gu.clientapp.task.socket;
 
 import com.example.basemodule.data.Command;
 import com.example.basemodule.data.ConnectPeer;
