@@ -37,7 +37,7 @@ public class ConnectTask {
     byte[] configData;
     try {
       infoSocket = new DatagramSocket(Port.CLIENT_CONNECT_PORT, localIp);
-      byte[] data = makeJsonByte();
+      byte[] data = makeJsonByte(Command.CONNECT);
       DatagramPacket datagramPacket =
           new DatagramPacket(data, 0, data.length, broadcastIp, Port.SERVER_CONNECT_PORT);
       infoSocket.send(datagramPacket);
@@ -61,6 +61,26 @@ public class ConnectTask {
     return null;
   }
 
+  public void disconnectLiveRoom() {
+    DatagramSocket socket = null;
+    try {
+      socket = new DatagramSocket(Port.CLIENT_CONNECT_PORT, localIp);
+      byte[] data = makeJsonByte(Command.DISCONNECT);
+      DatagramPacket datagramPacket =
+          new DatagramPacket(data, 0, data.length, broadcastIp, Port.SERVER_CONNECT_PORT);
+      socket.send(datagramPacket);
+    } catch (SocketException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      if (socket != null) {
+        LogUtil.log("connect socket close!");
+        socket.close();
+      }
+    }
+  }
+
   /*
   等候csd-0数据
    */
@@ -76,11 +96,11 @@ public class ConnectTask {
    *
    * @return json string byte[]
    */
-  private byte[] makeJsonByte() {
+  private byte[] makeJsonByte(String command) {
     String ip = localIp.getHostAddress();
     LogUtil.log("本地ip=" + ip);
     ConnectPeer connectPeer = new ConnectPeer(ip, userName, 10, roomNum);
-    PeerData peerData = new PeerData(connectPeer, Command.CONNECT, "");
+    PeerData peerData = new PeerData(connectPeer, command, "");
     Gson gson = new Gson();
     return gson.toJson(peerData, PeerData.class).getBytes();
   }

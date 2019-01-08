@@ -2,7 +2,6 @@ package com.gu.clientapp.task;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
-import android.util.Log;
 import android.view.Surface;
 
 import com.example.basemodule.log.LogUtil;
@@ -17,8 +16,7 @@ import static com.example.basemodule.data.Port.CLIENT_DATA_PORT;
 
 public class PreviewTask extends Thread {
   private static final String MIME_TYPE = "video/avc";
-  private static final String TAG = "ClientTextureView";
-  private DatagramPacket datagramPacket = null;
+  private DatagramPacket datagramPacket;
   private MediaCodec decode;
   private boolean stop;
   private DatagramSocket h264Socket;
@@ -45,19 +43,6 @@ public class PreviewTask extends Thread {
     // 104, -50,
     //      6, -30
     //    };//最新
-
-    //      byte[] header_sps = {
-    //        0, 0, 0, 1, 103, 66, 0, 41, -115, -115, 64, 80, 30, -48, 15, 8, -124, 83, -128
-    //      };
-    //
-    //      byte[] header_pps = {0, 0, 0, 1, 104, -54, 67, -56};
-    //      byte[] header_sps = {
-    //        0, 0, 0, 1, 103, 100, 0, 40, -84, 52, -59, 1, -32, 17, 31, 120, 11, 80, 16, 16, 31,
-    // 0, 0, 3,
-    //        3, -23, 0, 0, -22, 96, -108
-    //      };
-    //      byte[] header_pps = {0, 0, 0, 1, 104, -18, 60, -128};
-
     format.setByteBuffer("csd-0", ByteBuffer.wrap(header_sps));
     //      format.setByteBuffer("csd-1", ByteBuffer.wrap(header_pps));
 
@@ -71,7 +56,6 @@ public class PreviewTask extends Thread {
       h264Socket = new DatagramSocket(CLIENT_DATA_PORT); // 端口号
       h264Socket.setReuseAddress(true);
       h264Socket.setBroadcast(false);
-
     } catch (SocketException e) {
       e.printStackTrace();
     }
@@ -93,73 +77,14 @@ public class PreviewTask extends Thread {
         }
       }
       rtpData = datagramPacket.getData();
-      if (rtpData != null) {
-        Log.e(
-            TAG,
-            "-------------------客户端受到数据--------------------rtpData[0]="
-                + rtpData[0]
-                + ",rtpData[1]="
-                + rtpData[1]);
-        if (rtpData[0] == -128 && rtpData[1] == 96) {
-          Log.e(TAG, "run:xxx");
-          int l1 = (rtpData[12] << 24) & 0xff000000;
-          int l2 = (rtpData[13] << 16) & 0x00ff0000;
-          int l3 = (rtpData[14] << 8) & 0x0000ff00;
-          int l4 = rtpData[15] & 0x000000FF;
-          h264Length = l1 + l2 + l3 + l4;
-          Log.e(TAG, "run: h264Length=" + h264Length);
-          System.arraycopy(rtpData, 16, h264Data, 0, h264Length);
-          Log.e(
-              TAG,
-              "run:h264Data[0]="
-                  + h264Data[0]
-                  + ","
-                  + h264Data[1]
-                  + ","
-                  + h264Data[2]
-                  + ","
-                  + h264Data[3]
-                  + ","
-                  + h264Data[4]
-                  + ","
-                  + h264Data[5]
-                  + ","
-                  + h264Data[6]
-                  + ","
-                  + h264Data[7]
-                  + ","
-                  + h264Data[8]
-                  + ","
-                  + h264Data[9]
-                  + ","
-                  + h264Data[10]
-                  + ","
-                  + h264Data[11]
-                  + ","
-                  + h264Data[12]
-                  + ","
-                  + h264Data[13]
-                  + ","
-                  + h264Data[14]
-                  + ","
-                  + h264Data[15]
-                  + ","
-                  + h264Data[16]
-                  + ","
-                  + h264Data[17]
-                  + ","
-                  + h264Data[18]
-                  + ","
-                  + h264Data[19]
-                  + ","
-                  + h264Data[20]
-                  + ","
-                  + h264Data[21]
-                  + ","
-                  + h264Data[22]); // 打印sps、pps
-          offerDecoder(h264Data, h264Data.length);
-          Log.e(TAG, "run: offerDecoder=");
-        }
+      if (rtpData != null && rtpData[0] == -128 && rtpData[1] == 96) {
+        int l1 = (rtpData[12] << 24) & 0xff000000;
+        int l2 = (rtpData[13] << 16) & 0x00ff0000;
+        int l3 = (rtpData[14] << 8) & 0x0000ff00;
+        int l4 = rtpData[15] & 0x000000FF;
+        h264Length = l1 + l2 + l3 + l4;
+        System.arraycopy(rtpData, 16, h264Data, 0, h264Length);
+        offerDecoder(h264Data, h264Data.length);
       }
     }
   }

@@ -51,6 +51,7 @@ public class ClientActivity extends Activity implements TextureView.SurfaceTextu
   protected void onDestroy() {
     super.onDestroy();
     tv.setSurfaceTextureListener(null);
+    mCompositeDisposable.dispose();
   }
 
   private void connect2LiveRoom(final Surface surface) {
@@ -61,11 +62,7 @@ public class ClientActivity extends Activity implements TextureView.SurfaceTextu
                 new Function<Integer, byte[]>() {
                   @Override
                   public byte[] apply(Integer integer) throws Exception {
-                    InetAddress broadcastIP = INetUtil.getBroadcastAddress(getApplication());
-                    InetAddress localIp = InetAddress.getByName(INetUtil.getIP(getApplication()));
-                    LogUtil.log(broadcastIP.getHostAddress());
-                    LogUtil.log(localIp.getHostAddress());
-                    ConnectTask task = new ConnectTask(1000, "gu", broadcastIP, localIp);
+                    ConnectTask task = createConnectTask();
                     return task.start2Connect();
                   }
                 })
@@ -78,6 +75,27 @@ public class ClientActivity extends Activity implements TextureView.SurfaceTextu
                     mPreviewTask.configAndStart(surface, 640, 480, configBytes);
                   }
                 }));
+  }
+
+  private void disconnect2LiveRoom() {
+    mCompositeDisposable.add(
+        Observable.just(1000)
+            .observeOn(Schedulers.newThread())
+            .subscribe(
+                new Consumer<Integer>() {
+                  @Override
+                  public void accept(Integer integer) throws Exception {
+                    createConnectTask().disconnectLiveRoom();
+                  }
+                }));
+  }
+
+  private ConnectTask createConnectTask() throws Exception {
+    InetAddress broadcastIP = INetUtil.getBroadcastAddress(getApplication());
+    InetAddress localIp = InetAddress.getByName(INetUtil.getIP(getApplication()));
+    LogUtil.log(broadcastIP.getHostAddress());
+    LogUtil.log(localIp.getHostAddress());
+    return new ConnectTask(1000, "gu", broadcastIP, localIp);
   }
 
   public static void printByte(byte[] data) {
@@ -101,6 +119,7 @@ public class ClientActivity extends Activity implements TextureView.SurfaceTextu
   @Override
   public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
     mPreviewTask.stopPreview();
+    disconnect2LiveRoom();
     return false;
   }
 
