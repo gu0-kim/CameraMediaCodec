@@ -13,14 +13,15 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-public class ConnectTask {
+public class ConnectServerTask {
 
   private int roomNum;
   private InetAddress broadcastIp;
   private InetAddress localIp;
   private String userName;
 
-  public ConnectTask(int room, String userName, InetAddress broadcastIp, InetAddress localIp) {
+  public ConnectServerTask(
+      int room, String userName, InetAddress broadcastIp, InetAddress localIp) {
     this.roomNum = room;
     this.broadcastIp = broadcastIp;
     this.localIp = localIp;
@@ -37,6 +38,7 @@ public class ConnectTask {
     byte[] configData;
     try {
       infoSocket = new DatagramSocket(Port.CLIENT_CONNECT_PORT, localIp);
+      infoSocket.setSoTimeout(3000);
       byte[] data = makeJsonByte(Command.CONNECT);
       DatagramPacket datagramPacket =
           new DatagramPacket(data, 0, data.length, broadcastIp, Port.SERVER_CONNECT_PORT);

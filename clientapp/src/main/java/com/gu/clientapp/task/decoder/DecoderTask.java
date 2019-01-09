@@ -34,6 +34,7 @@ public class DecoderTask extends Thread {
     while (!release) {
       try {
         data = dataQueue.poll(30, TimeUnit.MILLISECONDS);
+        LogUtil.log("解码器解析数据,data=" + data);
         if (data != null) {
           offerDecoder(data, data.length);
         }
@@ -41,16 +42,19 @@ public class DecoderTask extends Thread {
         e.printStackTrace();
       }
     }
+    LogUtil.log("decoder thread quit!");
   }
 
   public void stopDecoder() {
     decode.stop();
+    LogUtil.log("stop decoder!");
   }
 
   public void releaseDecoder() {
     release = true;
     decode.stop();
     decode.release();
+    dataQueue.clear();
   }
 
   public void configAndStart(Surface surface, int width, int height) {
@@ -66,10 +70,9 @@ public class DecoderTask extends Thread {
     //    };//最新
     format.setByteBuffer("csd-0", ByteBuffer.wrap(configData));
     //      format.setByteBuffer("csd-1", ByteBuffer.wrap(header_pps));
-
+    decode.stop();
     decode.configure(format, surface, null, 0);
     decode.start();
-    start();
   }
 
   // 解码h264数据

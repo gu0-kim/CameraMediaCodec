@@ -11,10 +11,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import static com.example.basemodule.data.Port.CLIENT_DATA_PORT;
 
 public class SocketClient extends Thread {
-  private DatagramPacket datagramPacket;
   private DatagramSocket h264Socket;
   private boolean stop;
-  ArrayBlockingQueue<byte[]> dataQueue;
+  private ArrayBlockingQueue<byte[]> dataQueue;
+  private boolean dataNotUse;
 
   public SocketClient(ArrayBlockingQueue<byte[]> dataQueue) {
     socketInit();
@@ -35,15 +35,14 @@ public class SocketClient extends Thread {
   public void run() {
     byte[] data = new byte[80000];
     int h264Length;
-    byte[] rtpData;
 
     while (!stop) {
       if (h264Socket != null) {
         try {
-          datagramPacket = new DatagramPacket(data, data.length);
+          DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
           h264Socket.receive(datagramPacket); // 接收数据
-          rtpData = datagramPacket.getData();
-          if (rtpData != null && rtpData[0] == -128 && rtpData[1] == 96) {
+          byte[] rtpData = datagramPacket.getData();
+          if (rtpData != null && rtpData[0] == -128 && rtpData[1] == 96 && !dataNotUse) {
             int l1 = (rtpData[12] << 24) & 0xff000000;
             int l2 = (rtpData[13] << 16) & 0x00ff0000;
             int l3 = (rtpData[14] << 8) & 0x0000ff00;
@@ -64,6 +63,7 @@ public class SocketClient extends Thread {
         }
       }
     }
+    LogUtil.log("socket thread quit!");
   }
 
   public void stopSocket() {
@@ -71,6 +71,13 @@ public class SocketClient extends Thread {
     if (h264Socket != null) {
       h264Socket.close();
       h264Socket = null;
+    }
+  }
+
+  public void setDataNoConsumer(boolean notUse) {
+    dataNotUse = notUse;
+    if (notUse) {
+      dataQueue.clear();
     }
   }
 }
