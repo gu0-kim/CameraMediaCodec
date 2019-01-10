@@ -3,6 +3,8 @@ package com.gu.android.mediacodec.camera;
 import android.hardware.Camera;
 import android.util.Log;
 
+import com.example.basemodule.log.LogUtil;
+
 public class CameraDevice {
   private static final String TAG = "CameraDevice";
   private Camera mCamera;
@@ -39,15 +41,15 @@ public class CameraDevice {
       throw new RuntimeException("Unable to open camera");
     }
 
-    Camera.Parameters parms = mCamera.getParameters();
+    Camera.Parameters params = mCamera.getParameters();
 
-    choosePreviewSize(parms, encWidth, encHeight);
-    parms.set("orientation", "portrait");
-    mCamera.setDisplayOrientation(90);
-    // leave the frame rate set to default
-    mCamera.setParameters(parms);
+    choosePreviewSize(params, encWidth, encHeight);
+    //    //竖屏设置
+    //    params.set("orientation", "portrait");
+    //    mCamera.setDisplayOrientation(90);
+    mCamera.setParameters(params);
 
-    Camera.Size size = parms.getPreviewSize();
+    Camera.Size size = params.getPreviewSize();
     Log.d(TAG, "Camera preview size is " + size.width + "x" + size.height);
   }
 
@@ -58,21 +60,22 @@ public class CameraDevice {
    *
    * <p>TODO: should do a best-fit match.
    */
-  private static void choosePreviewSize(Camera.Parameters parms, int width, int height) {
+  private static void choosePreviewSize(Camera.Parameters params, int width, int height) {
     // We should make sure that the requested MPEG size is less than the preferred
     // size, and has the same aspect ratio.
-    Camera.Size ppsfv = parms.getPreferredPreviewSizeForVideo();
+    Camera.Size ppsfv = params.getPreferredPreviewSizeForVideo();
 
-    for (Camera.Size size : parms.getSupportedPreviewSizes()) {
+    for (Camera.Size size : params.getSupportedPreviewSizes()) {
+      LogUtil.log("width=" + size.width + ",height=" + size.height);
       if (size.width == width && size.height == height) {
-        parms.setPreviewSize(width, height);
+        params.setPreviewSize(width, height);
         return;
       }
     }
 
     Log.w(TAG, "Unable to set preview size to " + width + "x" + height);
     if (ppsfv != null) {
-      parms.setPreviewSize(ppsfv.width, ppsfv.height);
+      params.setPreviewSize(ppsfv.width, ppsfv.height);
     }
   }
 

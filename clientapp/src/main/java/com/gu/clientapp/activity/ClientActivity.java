@@ -5,7 +5,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.gu.clientapp.R;
-import com.gu.clientapp.mvp.view.ClientFragment;
+import com.gu.clientapp.mvp.client.view.ClientFragment;
 
 public class ClientActivity extends AppCompatActivity {
   ClientFragment fragment;

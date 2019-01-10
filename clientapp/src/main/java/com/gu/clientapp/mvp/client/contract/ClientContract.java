@@ -1,4 +1,4 @@
-package com.gu.clientapp.mvp.contract;
+package com.gu.clientapp.mvp.client.contract;
 
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
@@ -6,7 +6,10 @@ import android.graphics.SurfaceTexture;
 import com.gu.clientapp.mvp.task.socket.ConnectServerTask;
 
 public interface ClientContract {
-  interface ClientPresenter {
+  interface Presenter {
+    ClientView getView();
+
+    void setView(ClientView clientView);
 
     void onCreate(Activity activity);
 
@@ -23,6 +26,8 @@ public interface ClientContract {
     void startPreview(SurfaceTexture surfaceTexture, int width, int height);
 
     void stopPreview();
+
+    void release();
   }
 
   interface ClientView {

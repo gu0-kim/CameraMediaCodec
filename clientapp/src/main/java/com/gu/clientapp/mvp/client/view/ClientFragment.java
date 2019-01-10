@@ -1,10 +1,11 @@
-package com.gu.clientapp.mvp.view;
+package com.gu.clientapp.mvp.client.view;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.TextureView;
 import android.view.View;
@@ -15,15 +16,15 @@ import android.widget.ProgressBar;
 import com.example.basemodule.log.LogUtil;
 import com.gu.clientapp.R;
 import com.gu.clientapp.activity.ClientActivity;
-import com.gu.clientapp.mvp.contract.ClientContract;
-import com.gu.clientapp.mvp.presenter.ClientPresenter;
+import com.gu.clientapp.mvp.client.contract.ClientContract;
+import com.gu.clientapp.mvp.client.presenter.ClientPresenter;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 
-public class ClientFragment extends BaseView
+public class ClientFragment extends Fragment
     implements TextureView.SurfaceTextureListener, ClientContract.ClientView {
 
   Unbinder unbinder;

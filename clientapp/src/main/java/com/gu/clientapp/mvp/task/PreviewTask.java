@@ -31,7 +31,7 @@ public class PreviewTask {
   }
 
   public void startPreview() {
-    mSocketClient.setDataNoConsumer(false);
+    mSocketClient.setPauseOffer(false);
     if (!mDecoderTask.isStarted()) {
       mDecoderTask.start();
     } else {
@@ -40,7 +40,7 @@ public class PreviewTask {
   }
 
   public void stopPreview() {
-    mSocketClient.setDataNoConsumer(true);
+    mSocketClient.setPauseOffer(true);
     mDecoderTask.stopDecoder();
   }
 

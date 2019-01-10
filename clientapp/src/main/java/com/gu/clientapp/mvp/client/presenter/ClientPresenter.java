@@ -1,4 +1,4 @@
-package com.gu.clientapp.mvp.presenter;
+package com.gu.clientapp.mvp.client.presenter;
 
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
@@ -6,7 +6,9 @@ import android.view.Surface;
 
 import com.example.basemodule.log.LogUtil;
 import com.example.basemodule.utils.inet.INetUtil;
-import com.gu.clientapp.mvp.contract.ClientContract;
+import com.gu.clientapp.mvp.client.contract.ClientContract;
+import com.gu.clientapp.mvp.client.contract.ClientContract.ClientView;
+import com.gu.clientapp.mvp.client.contract.ClientContract.Presenter;
 import com.gu.clientapp.mvp.task.PreviewTask;
 import com.gu.clientapp.mvp.task.socket.ConnectServerTask;
 
@@ -22,7 +24,7 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
-public class ClientPresenter extends BasePresenter implements ClientContract.ClientPresenter {
+public class ClientPresenter implements Presenter {
   private PreviewTask mPreviewTask;
   private CompositeDisposable mCompositeDisposable;
   private byte[] configData;
@@ -30,6 +32,8 @@ public class ClientPresenter extends BasePresenter implements ClientContract.Cli
   private final Object lock = new Object();
   private InetAddress broadcastIP;
   private InetAddress localIp;
+
+  private ClientView mClientView;
 
   @Override
   public void onCreate(Activity activity) {
@@ -61,11 +65,11 @@ public class ClientPresenter extends BasePresenter implements ClientContract.Cli
                 new Consumer<Boolean>() {
                   @Override
                   public void accept(Boolean connected) throws Exception {
-                    ((ClientContract.ClientView) getView()).hideProgressBar();
+                    getView().hideProgressBar();
                     if (connected) {
                       startPreview(surfaceTexture, width, height);
                     } else {
-                      ((ClientContract.ClientView) getView()).showReconnectBtn();
+                      getView().showReconnectBtn();
                     }
                   }
                 },
@@ -165,15 +169,15 @@ public class ClientPresenter extends BasePresenter implements ClientContract.Cli
                     mPreviewTask.startReceiveData();
                     connected = true;
                     startPreview(surfaceTexture, width, height);
-                    ((ClientContract.ClientView) getView()).hideProgressBar();
-                    ((ClientContract.ClientView) getView()).hideReconnectBtn();
+                    getView().hideProgressBar();
+                    getView().hideReconnectBtn();
                   }
                 },
                 new Consumer<Throwable>() {
                   @Override
                   public void accept(Throwable throwable) throws Exception {
-                    ((ClientContract.ClientView) getView()).showReconnectBtn();
-                    ((ClientContract.ClientView) getView()).hideProgressBar();
+                    getView().showReconnectBtn();
+                    getView().hideProgressBar();
                   }
                 }));
   }
@@ -204,11 +208,21 @@ public class ClientPresenter extends BasePresenter implements ClientContract.Cli
 
   @Override
   public void release() {
-    super.release();
     if (mPreviewTask != null) {
       mPreviewTask.stopReceiveData();
       mPreviewTask.releasePreview();
     }
     if (!mCompositeDisposable.isDisposed()) mCompositeDisposable.dispose();
+    mClientView = null;
+  }
+
+  @Override
+  public ClientContract.ClientView getView() {
+    return mClientView;
+  }
+
+  @Override
+  public void setView(ClientContract.ClientView clientView) {
+    mClientView = clientView;
   }
 }

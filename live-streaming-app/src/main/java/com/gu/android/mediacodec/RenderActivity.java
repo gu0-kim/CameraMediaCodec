@@ -4,13 +4,16 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 
+import com.example.basemodule.log.LogUtil;
 import com.gu.android.mediacodec.server.Server;
 import com.gu.android.mediacodec.server.Server.ServiceBinder;
 
@@ -28,6 +31,8 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
 
   @BindView(R.id.startBtn)
   Button startBtn;
+
+  private int width, height;
 
   private ServiceBinder mServiceBinder;
   private ServiceConnection mServiceConnection =
@@ -74,8 +79,16 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    LogUtil.log("Build.VERSION.SDK_INT=" + Build.VERSION.SDK_INT);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      LogUtil.log("in");
+      findViewById(android.R.id.content)
+          .setSystemUiVisibility(
+              View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    }
     setContentView(R.layout.layout);
     ButterKnife.bind(this);
+    getSurfaceViewSize();
     mSurfaceView.getHolder().addCallback(this);
     Intent service = new Intent(this, Server.class);
     bindService(service, mServiceConnection, BIND_AUTO_CREATE);
@@ -114,5 +127,23 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
 
   private boolean isLiveStream() {
     return mTask != null && !mTask.isStopLive();
+  }
+
+  private void getSurfaceViewSize() {
+    final ViewTreeObserver vto = mSurfaceView.getViewTreeObserver();
+    vto.addOnGlobalLayoutListener(
+        new ViewTreeObserver.OnGlobalLayoutListener() {
+          @Override
+          public void onGlobalLayout() {
+            width = mSurfaceView.getWidth();
+            height = mSurfaceView.getHeight();
+            int max = Math.max(width, height);
+            int min = Math.min(width, height);
+            width = max;
+            height = min;
+            LogUtil.log("width=" + width + ",height=" + height);
+            mSurfaceView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+          }
+        });
   }
 }

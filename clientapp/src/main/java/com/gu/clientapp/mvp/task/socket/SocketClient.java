@@ -14,7 +14,7 @@ public class SocketClient extends Thread {
   private DatagramSocket h264Socket;
   private boolean stop;
   private ArrayBlockingQueue<byte[]> dataQueue;
-  private volatile boolean dataNotUse;
+  private volatile boolean pauseOffer;
 
   public SocketClient(ArrayBlockingQueue<byte[]> dataQueue) {
     socketInit();
@@ -42,7 +42,7 @@ public class SocketClient extends Thread {
           DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
           h264Socket.receive(datagramPacket); // 接收数据
           byte[] rtpData = datagramPacket.getData();
-          if (rtpData != null && rtpData[0] == -128 && rtpData[1] == 96 && !dataNotUse) {
+          if (rtpData != null && rtpData[0] == -128 && rtpData[1] == 96 && !pauseOffer) {
             int l1 = (rtpData[12] << 24) & 0xff000000;
             int l2 = (rtpData[13] << 16) & 0x00ff0000;
             int l3 = (rtpData[14] << 8) & 0x0000ff00;
@@ -73,9 +73,14 @@ public class SocketClient extends Thread {
     }
   }
 
-  public void setDataNoConsumer(boolean notUse) {
-    dataNotUse = notUse;
-    if (notUse) {
+  /**
+   * pause produce data to decoder thread.
+   *
+   * @param pause
+   */
+  public void setPauseOffer(boolean pause) {
+    pauseOffer = pause;
+    if (pause) {
       dataQueue.clear();
     }
   }
