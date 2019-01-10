@@ -1,6 +1,7 @@
 package com.gu.android.mediacodec;
 
 import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.media.MediaCodec;
 import android.view.Surface;
 
@@ -12,32 +13,32 @@ import com.gu.android.mediacodec.opengl.SurfaceTextureManager;
 import com.gu.android.mediacodec.server.Server.ServiceBinder;
 import com.gu.rtplibrary.utils.ByteUtil;
 
-import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_HEIGHT;
-import static com.gu.android.mediacodec.mediacodec.CodecParams.OUTPUT_WIDTH;
-
 public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallback {
 
   private SurfaceTextureManager mStManager;
-  private static final long DURATION_SEC = 8; // 8 seconds of video
   private CameraDevice cameraDevice;
-  //  private static final String IP_ADDRESS = "192.168.1.102";
-  //  private static final int PORT = 5004;
 
   private VideoEncoder mEncoder;
   private VideoDecoder mDecoder;
-  //  private RtpSenderWrapper mRtpSenderWrapper;
 
   private boolean paused;
   private boolean stopLive;
-  private byte[] config;
   private ServiceBinder mServiceBinder;
+  private int previewWidth, previewHeight;
 
-  public LiveStreamTask(Surface outputSurface, ServiceBinder serviceBinder) {
-    mDecoder = new VideoDecoder(outputSurface);
-    mEncoder = new VideoEncoder(OUTPUT_WIDTH, OUTPUT_HEIGHT);
-    mEncoder.setCallback(this);
+  public LiveStreamTask(Surface outputSurface, ServiceBinder serviceBinder, int width, int height) {
     this.mServiceBinder = serviceBinder;
-    //    mRtpSenderWrapper = new RtpSenderWrapper(IP_ADDRESS, PORT, false);
+    Camera.Size size = initCamera(width, height);
+    previewWidth = size.width;
+    previewHeight = size.height;
+    mDecoder = new VideoDecoder(outputSurface);
+    mEncoder = new VideoEncoder(previewWidth, previewHeight);
+    mEncoder.setCallback(this);
+  }
+
+  private Camera.Size initCamera(int width, int height) {
+    cameraDevice = new CameraDevice();
+    return cameraDevice.prepareCamera(width, height);
   }
 
   public void stopLiveStream() {
@@ -71,8 +72,6 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
     mEncoder.start();
     CodecInputSurface mInputSurface = mEncoder.getCodecInputSurface();
 
-    cameraDevice = new CameraDevice();
-    cameraDevice.prepareCamera(OUTPUT_WIDTH, OUTPUT_HEIGHT);
     try {
       mInputSurface.makeCurrent();
       mStManager = new SurfaceTextureManager();
@@ -127,11 +126,11 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
     if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
       // this is the first and only config sample, which contains information about codec
       // like H.264, that let's configure the decoder
-      config = new byte[info.size];
+      byte[] config = new byte[info.size];
       System.arraycopy(data, 0, config, 0, info.size);
       ByteUtil.printByte(config);
       // {,0,0,0,1,103,66,-128,30,-38,2,-128,-10,-128,109,10,19,80,0,0,0,1,104,-50,6,-30}
-      mDecoder.configure(OUTPUT_WIDTH, OUTPUT_HEIGHT, config, 0, info.size);
+      mDecoder.configure(previewWidth, previewHeight, config, 0, info.size);
       if (mServiceBinder != null) mServiceBinder.saveConfigData(config);
     } else if (!paused) {
       // pass byte[] to decoder's queue to render asap

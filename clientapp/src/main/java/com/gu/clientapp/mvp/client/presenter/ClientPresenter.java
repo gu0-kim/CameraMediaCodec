@@ -85,7 +85,7 @@ public class ClientPresenter implements Presenter {
     synchronized (lock) {
       if (!connected) {
         try {
-          lock.wait();
+          lock.wait(3000);
         } catch (InterruptedException ee) {
           ee.printStackTrace();
         }
@@ -203,7 +203,7 @@ public class ClientPresenter implements Presenter {
 
   @Override
   public void stopPreview() {
-    mPreviewTask.stopPreview();
+    if (mPreviewTask != null) mPreviewTask.stopPreview();
   }
 
   @Override

@@ -120,7 +120,7 @@ public class RenderActivity extends Activity implements SurfaceHolder.Callback {
 
   private void startLiveStream() {
     if (previewHolder != null && previewHolder.getSurface() != null) {
-      mTask = new LiveStreamTask(previewHolder.getSurface(), mServiceBinder);
+      mTask = new LiveStreamTask(previewHolder.getSurface(), mServiceBinder, width, height);
       mTask.start();
     }
   }

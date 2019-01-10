@@ -17,7 +17,7 @@ public class CameraDevice {
    *
    * <p>Opens a Camera and sets parameters. Does not start preview.
    */
-  public void prepareCamera(int encWidth, int encHeight) {
+  public Camera.Size prepareCamera(int encWidth, int encHeight) {
     if (mCamera != null) {
       throw new RuntimeException("camera already initialized");
     }
@@ -51,6 +51,7 @@ public class CameraDevice {
 
     Camera.Size size = params.getPreviewSize();
     Log.d(TAG, "Camera preview size is " + size.width + "x" + size.height);
+    return size;
   }
 
   /**
@@ -68,6 +69,7 @@ public class CameraDevice {
     for (Camera.Size size : params.getSupportedPreviewSizes()) {
       LogUtil.log("width=" + size.width + ",height=" + size.height);
       if (size.width == width && size.height == height) {
+        LogUtil.log("完美匹配尺寸,width=" + width + ",height=" + height);
         params.setPreviewSize(width, height);
         return;
       }
