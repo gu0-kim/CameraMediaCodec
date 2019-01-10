@@ -6,6 +6,10 @@ public class LogUtil {
   private static final String TAG = "LogUtil";
 
   public static void log(String log) {
-    Log.e(TAG, "-----------------" + log + "-----------------");
+    log(TAG, log);
+  }
+
+  public static void log(String tag, String log) {
+    Log.e(tag, "-----------------" + log + "-----------------");
   }
 }

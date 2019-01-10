@@ -1,4 +1,4 @@
-package com.gu.clientapp.task.socket;
+package com.gu.clientapp.mvp.task.socket;
 
 import com.example.basemodule.log.LogUtil;
 
@@ -14,7 +14,7 @@ public class SocketClient extends Thread {
   private DatagramSocket h264Socket;
   private boolean stop;
   private ArrayBlockingQueue<byte[]> dataQueue;
-  private boolean dataNotUse;
+  private volatile boolean dataNotUse;
 
   public SocketClient(ArrayBlockingQueue<byte[]> dataQueue) {
     socketInit();
@@ -48,7 +48,6 @@ public class SocketClient extends Thread {
             int l3 = (rtpData[14] << 8) & 0x0000ff00;
             int l4 = rtpData[15] & 0x000000FF;
             h264Length = l1 + l2 + l3 + l4;
-            LogUtil.log("h264 length=" + h264Length);
             byte[] rdata = new byte[h264Length];
             System.arraycopy(rtpData, 16, rdata, 0, h264Length);
             //          offerDecoder(h264Data, h264Data.length);

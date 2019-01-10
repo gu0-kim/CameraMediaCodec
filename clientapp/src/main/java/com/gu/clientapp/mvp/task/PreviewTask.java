@@ -1,9 +1,9 @@
-package com.gu.clientapp.task;
+package com.gu.clientapp.mvp.task;
 
 import android.view.Surface;
 
-import com.gu.clientapp.task.decoder.DecoderTask;
-import com.gu.clientapp.task.socket.SocketClient;
+import com.gu.clientapp.mvp.task.decoder.DecoderTask;
+import com.gu.clientapp.mvp.task.socket.SocketClient;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -32,14 +32,11 @@ public class PreviewTask {
 
   public void startPreview() {
     mSocketClient.setDataNoConsumer(false);
-    if (!decoderStart) {
+    if (!mDecoderTask.isStarted()) {
       mDecoderTask.start();
-      decoderStart = true;
+    } else {
+      mDecoderTask.startDecoder();
     }
-  }
-
-  public boolean isDecoderStart() {
-    return decoderStart;
   }
 
   public void stopPreview() {

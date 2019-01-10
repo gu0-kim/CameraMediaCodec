@@ -53,7 +53,6 @@ public class Server extends Service {
   public void onCreate() {
     super.onCreate();
     peers = new ConcurrentHashMap<>();
-    mExecutorService = Executors.newFixedThreadPool(4);
     h264BlockingQueue = new ArrayBlockingQueue<>(10);
   }
 
@@ -91,6 +90,7 @@ public class Server extends Service {
     }
 
     public void startServer() {
+      mExecutorService = Executors.newFixedThreadPool(4);
       mServerTask = new ServerConnectThread();
       mServerTask.start();
       mServerSend264Thread = new ServerSend264Thread();
@@ -101,6 +101,9 @@ public class Server extends Service {
       configDataReady = false;
       mServerTask.stopThread();
       mServerSend264Thread.stopThread();
+      synchronized (lock) {
+        peers.clear();
+      }
     }
 
     public int getOnLineNumbers() {

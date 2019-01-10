@@ -1,13 +1,14 @@
-package com.gu.clientapp.mvp;
+package com.gu.clientapp.mvp.contract;
 
+import android.app.Activity;
 import android.graphics.SurfaceTexture;
 
-import com.gu.clientapp.task.socket.ConnectServerTask;
+import com.gu.clientapp.mvp.task.socket.ConnectServerTask;
 
-public interface Contract {
+public interface ClientContract {
   interface ClientPresenter {
 
-    void onCreate();
+    void onCreate(Activity activity);
 
     void connect2LiveRoom();
 

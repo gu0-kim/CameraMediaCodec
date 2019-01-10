@@ -1,9 +1,10 @@
-package com.gu.clientapp;
+package com.gu.clientapp.activity;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
+import com.gu.clientapp.R;
 import com.gu.clientapp.mvp.view.ClientFragment;
 
 public class ClientActivity extends AppCompatActivity {

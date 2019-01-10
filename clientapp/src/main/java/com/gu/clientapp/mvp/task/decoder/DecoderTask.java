@@ -1,4 +1,4 @@
-package com.gu.clientapp.task.decoder;
+package com.gu.clientapp.mvp.task.decoder;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
@@ -17,6 +17,7 @@ public class DecoderTask extends Thread {
   private ArrayBlockingQueue<byte[]> dataQueue;
   private boolean release;
   private byte[] configData;
+  private volatile boolean started;
 
   public DecoderTask(ArrayBlockingQueue<byte[]> dataQueue, byte[] configData) {
     try {
@@ -31,10 +32,10 @@ public class DecoderTask extends Thread {
   @Override
   public void run() {
     byte[] data;
+    started = true;
     while (!release) {
       try {
         data = dataQueue.poll(30, TimeUnit.MILLISECONDS);
-        LogUtil.log("解码器解析数据,data=" + data);
         if (data != null) {
           offerDecoder(data, data.length);
         }
@@ -45,7 +46,7 @@ public class DecoderTask extends Thread {
     LogUtil.log("decoder thread quit!");
   }
 
-  public void stopDecoder() {
+  public synchronized void stopDecoder() {
     decode.stop();
     LogUtil.log("stop decoder!");
   }
@@ -55,6 +56,14 @@ public class DecoderTask extends Thread {
     decode.stop();
     decode.release();
     dataQueue.clear();
+  }
+
+  public void startDecoder() {
+    decode.start();
+  }
+
+  public boolean isStarted() {
+    return started;
   }
 
   public void configAndStart(Surface surface, int width, int height) {
@@ -76,8 +85,7 @@ public class DecoderTask extends Thread {
   }
 
   // 解码h264数据
-  private void offerDecoder(byte[] input, int length) {
-    LogUtil.log("offerDecoder");
+  private synchronized void offerDecoder(byte[] input, int length) {
     try {
       ByteBuffer[] inputBuffers = decode.getInputBuffers();
       int inputBufferIndex = decode.dequeueInputBuffer(0);
@@ -94,7 +102,6 @@ public class DecoderTask extends Thread {
       MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
 
       int outputBufferIndex = decode.dequeueOutputBuffer(bufferInfo, 0);
-      LogUtil.log("outputBufferIndex=" + outputBufferIndex);
       while (outputBufferIndex >= 0) {
         // If a valid surface was specified when configuring the codec,
         // passing true renders this output buffer to the surface.

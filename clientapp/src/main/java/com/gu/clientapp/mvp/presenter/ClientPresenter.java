@@ -1,13 +1,14 @@
 package com.gu.clientapp.mvp.presenter;
 
+import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.view.Surface;
 
 import com.example.basemodule.log.LogUtil;
 import com.example.basemodule.utils.inet.INetUtil;
-import com.gu.clientapp.mvp.Contract;
-import com.gu.clientapp.task.PreviewTask;
-import com.gu.clientapp.task.socket.ConnectServerTask;
+import com.gu.clientapp.mvp.contract.ClientContract;
+import com.gu.clientapp.mvp.task.PreviewTask;
+import com.gu.clientapp.mvp.task.socket.ConnectServerTask;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -21,7 +22,7 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
-public class ClientPresenter extends BasePresenter implements Contract.ClientPresenter {
+public class ClientPresenter extends BasePresenter implements ClientContract.ClientPresenter {
   private PreviewTask mPreviewTask;
   private CompositeDisposable mCompositeDisposable;
   private byte[] configData;
@@ -31,11 +32,11 @@ public class ClientPresenter extends BasePresenter implements Contract.ClientPre
   private InetAddress localIp;
 
   @Override
-  public void onCreate() {
+  public void onCreate(Activity activity) {
     mCompositeDisposable = new CompositeDisposable();
     try {
-      broadcastIP = INetUtil.getBroadcastAddress(mView.getActivity());
-      localIp = InetAddress.getByName(INetUtil.getIP(mView.getActivity()));
+      broadcastIP = INetUtil.getBroadcastAddress(activity);
+      localIp = InetAddress.getByName(INetUtil.getIP(activity));
     } catch (UnknownHostException e) {
       e.printStackTrace();
     }
@@ -49,15 +50,8 @@ public class ClientPresenter extends BasePresenter implements Contract.ClientPre
                 new ObservableOnSubscribe<Boolean>() {
                   @Override
                   public void subscribe(ObservableEmitter<Boolean> e) throws Exception {
-                    synchronized (lock) {
-                      if (!connected) {
-                        try {
-                          lock.wait();
-                        } catch (InterruptedException ee) {
-                          ee.printStackTrace();
-                        }
-                      }
-                    }
+                    waitingUntilConnected();
+                    LogUtil.log("syn", "wait quit");
                     e.onNext(connected);
                   }
                 })
@@ -67,14 +61,45 @@ public class ClientPresenter extends BasePresenter implements Contract.ClientPre
                 new Consumer<Boolean>() {
                   @Override
                   public void accept(Boolean connected) throws Exception {
-                    ((Contract.ClientView) getView()).hideProgressBar();
+                    ((ClientContract.ClientView) getView()).hideProgressBar();
                     if (connected) {
                       startPreview(surfaceTexture, width, height);
                     } else {
-                      ((Contract.ClientView) getView()).showReconnectBtn();
+                      ((ClientContract.ClientView) getView()).showReconnectBtn();
                     }
                   }
+                },
+                new Consumer<Throwable>() {
+                  @Override
+                  public void accept(Throwable throwable) throws Exception {
+                    LogUtil.log("exception!");
+                  }
                 }));
+  }
+
+  private void waitingUntilConnected() {
+    synchronized (lock) {
+      if (!connected) {
+        try {
+          lock.wait();
+        } catch (InterruptedException ee) {
+          ee.printStackTrace();
+        }
+      }
+    }
+  }
+
+  private void notifyConnected() {
+    synchronized (lock) {
+      connected = true;
+      lock.notifyAll();
+    }
+  }
+
+  private void notifyWaite() {
+    synchronized (lock) {
+      lock.notifyAll();
+    }
   }
 
   @Override
@@ -104,19 +129,14 @@ public class ClientPresenter extends BasePresenter implements Contract.ClientPre
                     configData = data;
                     mPreviewTask = new PreviewTask(configData);
                     mPreviewTask.startReceiveData();
-                    synchronized (lock) {
-                      connected = true;
-                      lock.notifyAll();
-                    }
+                    notifyConnected();
                   }
                 },
                 new Consumer<Throwable>() {
                   @Override
                   public void accept(Throwable throwable) throws Exception {
-                    LogUtil.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-                    synchronized (lock) {
-                      lock.notifyAll();
-                    }
+                    // 超时或者连接异常
+                    notifyWaite();
                   }
                 }));
   }
@@ -141,20 +161,19 @@ public class ClientPresenter extends BasePresenter implements Contract.ClientPre
                   @Override
                   public void accept(byte[] data) throws Exception {
                     configData = data;
-                    if (configData != null) {
-                      mPreviewTask = new PreviewTask(configData);
-                      mPreviewTask.startReceiveData();
-                      startPreview(surfaceTexture, width, height);
-                      ((Contract.ClientView) getView()).hideProgressBar();
-                      ((Contract.ClientView) getView()).hideReconnectBtn();
-                    }
+                    mPreviewTask = new PreviewTask(configData);
+                    mPreviewTask.startReceiveData();
+                    connected = true;
+                    startPreview(surfaceTexture, width, height);
+                    ((ClientContract.ClientView) getView()).hideProgressBar();
+                    ((ClientContract.ClientView) getView()).hideReconnectBtn();
                   }
                 },
                 new Consumer<Throwable>() {
                   @Override
                   public void accept(Throwable throwable) throws Exception {
-                    ((Contract.ClientView) getView()).showReconnectBtn();
-                    ((Contract.ClientView) getView()).hideProgressBar();
+                    ((ClientContract.ClientView) getView()).showReconnectBtn();
+                    ((ClientContract.ClientView) getView()).hideProgressBar();
                   }
                 }));
   }

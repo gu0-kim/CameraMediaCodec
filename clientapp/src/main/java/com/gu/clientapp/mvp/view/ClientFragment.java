@@ -13,9 +13,9 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.example.basemodule.log.LogUtil;
-import com.gu.clientapp.ClientActivity;
 import com.gu.clientapp.R;
-import com.gu.clientapp.mvp.Contract;
+import com.gu.clientapp.activity.ClientActivity;
+import com.gu.clientapp.mvp.contract.ClientContract;
 import com.gu.clientapp.mvp.presenter.ClientPresenter;
 
 import butterknife.BindView;
@@ -24,7 +24,7 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 
 public class ClientFragment extends BaseView
-    implements TextureView.SurfaceTextureListener, Contract.ClientView {
+    implements TextureView.SurfaceTextureListener, ClientContract.ClientView {
 
   Unbinder unbinder;
 
@@ -43,6 +43,14 @@ public class ClientFragment extends BaseView
   SurfaceTexture availableSurface;
   int width, height;
 
+  public static ClientFragment newInstance(String tag) {
+    ClientFragment fragment = new ClientFragment();
+    Bundle data = new Bundle();
+    data.putString("key", tag);
+    fragment.setArguments(data);
+    return fragment;
+  }
+
   @Override
   public void onAttach(Context context) {
     super.onAttach(context);
@@ -55,21 +63,14 @@ public class ClientFragment extends BaseView
     mActivity = null;
   }
 
-  public static ClientFragment newInstance(String tag) {
-    ClientFragment fragment = new ClientFragment();
-    Bundle data = new Bundle();
-    data.putString("key", tag);
-    fragment.setArguments(data);
-    return fragment;
-  }
-
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    // 保证屏幕旋转不重建fragment
     setRetainInstance(true);
     presenter = new ClientPresenter();
     presenter.setView(this);
-    presenter.onCreate();
+    presenter.onCreate(mActivity);
     presenter.connect2LiveRoom();
   }
 
@@ -96,19 +97,20 @@ public class ClientFragment extends BaseView
   @Override
   public void onDestroyView() {
     super.onDestroyView();
-    mTextureView.setSurfaceTextureListener(null);
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    LogUtil.log("fragment onDestroy!");
     presenter.disconnect2LiveRoom();
     presenter.release();
+    unbinder.unbind();
+    unbinder = null;
   }
 
   @Override
   public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+    LogUtil.log("onSurfaceTextureAvailable");
     availableSurface = surface;
     this.width = width;
     this.height = height;
@@ -120,6 +122,7 @@ public class ClientFragment extends BaseView
 
   @Override
   public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+    LogUtil.log("des", "onSurfaceTextureDestroyed");
     presenter.stopPreview();
     return false;
   }
