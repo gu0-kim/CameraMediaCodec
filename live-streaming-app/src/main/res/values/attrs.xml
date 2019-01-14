@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <declare-styleable name="StatusView">
+        <attr name="textSize" format="dimension" />
+        <attr name="text" format="string" />
+        <attr name="bg_color" format="color" />
+    </declare-styleable>
+</resources>

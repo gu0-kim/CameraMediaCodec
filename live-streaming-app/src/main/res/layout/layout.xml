@@ -28,6 +28,7 @@
         android:padding="8dp"
         android:text="@string/person_num_text"
         android:textColor="#fff"
+        android:textSize="12sp"
         android:visibility="gone" />
 
 
@@ -69,32 +70,19 @@
         android:layout_marginLeft="@dimen/live_streaming_room_margin_left"
         android:layout_marginBottom="@dimen/live_streaming_room_margin_bottom"
         android:text="直播间号：1000"
-        android:textColor="#fff" />
+        android:textColor="#fff"
+        android:textSize="12sp" />
 
-    <LinearLayout
+
+    <com.gu.android.mediacodec.mvp.widget.StatusView
         android:id="@+id/statusLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_marginTop="@dimen/live_streaming_room_margin_top"
         android:layout_marginRight="@dimen/live_streaming_room_margin_left"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <ImageView
-            android:id="@+id/statusImg"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/live_streaming_status_level_drawable" />
-
-        <TextView
-            android:id="@+id/statusTv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/previewing"
-            android:textColor="#fff"
-            android:textSize="12sp" />
-    </LinearLayout>
+        android:visibility="gone"
+        app:bg_color="@color/person_num_color"
+        app:text="直播中"
+        app:textSize="12sp" />
 </RelativeLayout>

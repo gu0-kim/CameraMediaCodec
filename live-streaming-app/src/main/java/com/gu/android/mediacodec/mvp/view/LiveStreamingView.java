@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -18,7 +19,6 @@ import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -26,12 +26,14 @@ import com.example.basemodule.log.LogUtil;
 import com.gu.android.mediacodec.R;
 import com.gu.android.mediacodec.mvp.contract.LiveStreamingContract.View;
 import com.gu.android.mediacodec.mvp.presenter.LiveStreamingPresenter;
+import com.gu.android.mediacodec.mvp.widget.StatusView;
 import com.gu.android.mediacodec.service.PushStreamServer;
 import com.gu.android.mediacodec.service.PushStreamServer.ServiceBinder;
 
 import java.util.Locale;
 
 import butterknife.BindColor;
+import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -63,17 +65,11 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
   @BindView(R.id.previewBtn)
   Button previewBtn;
 
-  @BindView(R.id.statusImg)
-  ImageView statusImg;
-
   @BindView(R.id.surface)
   SurfaceView mSurfaceView;
 
   @BindView(R.id.statusLayout)
-  LinearLayout statusLayout;
-
-  @BindView(R.id.statusTv)
-  TextView statusTv;
+  StatusView statusLayout;
 
   @BindView(R.id.playBtnLayout)
   LinearLayout playBtnLayout;
@@ -83,6 +79,12 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
 
   @BindColor(R.color.stop_color)
   int stopColor;
+
+  @BindString(R.string.previewing)
+  String previewStr;
+
+  @BindString(R.string.living)
+  String livingStr;
 
   SurfaceHolder previewHolder;
 
@@ -213,8 +215,11 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
   @Override
   public void updateStatusImageView(int status) {
     statusLayout.setVisibility(android.view.View.VISIBLE);
-    statusImg.setImageLevel(status);
-    statusTv.setText(status == 0 ? R.string.previewing : R.string.living);
+    if (status == 0) {
+      statusLayout.update(previewStr, Color.RED);
+    } else {
+      statusLayout.update(livingStr, Color.GREEN);
+    }
   }
 
   @Override
