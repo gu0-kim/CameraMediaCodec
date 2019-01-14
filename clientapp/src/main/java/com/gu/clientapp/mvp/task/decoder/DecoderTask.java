@@ -4,6 +4,7 @@ import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.view.Surface;
 
+import com.example.basemodule.data.CodecParams;
 import com.example.basemodule.log.LogUtil;
 
 import java.io.IOException;
@@ -69,9 +70,9 @@ public class DecoderTask extends Thread {
   public void configAndStart(Surface surface, int width, int height) {
     LogUtil.log("configAndStart");
     final MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
-    format.setInteger(MediaFormat.KEY_BIT_RATE, 40000);
-    format.setInteger(MediaFormat.KEY_FRAME_RATE, 20);
-    format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
+    format.setInteger(MediaFormat.KEY_BIT_RATE, CodecParams.VIDEO_BITRATE);
+    format.setInteger(MediaFormat.KEY_FRAME_RATE, CodecParams.VIDEO_FRAME_PER_SECOND);
+    format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, CodecParams.VIDEO_I_FRAME_INTERVAL);
     //    byte[] header_sps = {
     //      0, 0, 0, 1, 103, 66, -128, 30, -38, 2, -128, -10, -128, 109, 10, 19, 80, 0, 0, 0, 1,
     // 104, -50,

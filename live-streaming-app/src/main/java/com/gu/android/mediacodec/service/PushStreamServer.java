@@ -1,8 +1,9 @@
-package com.gu.android.mediacodec.server;
+package com.gu.android.mediacodec.service;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -28,10 +29,10 @@ import java.util.concurrent.TimeUnit;
 import static com.example.basemodule.data.Port.CLIENT_CONNECT_PORT;
 import static com.example.basemodule.data.Port.CLIENT_DATA_PORT;
 
-public class Server extends Service {
+public class PushStreamServer extends Service {
   private ServiceBinder mServiceBinder = new ServiceBinder();
 
-  private static final String TAG = Server.class.getSimpleName();
+  private static final String TAG = PushStreamServer.class.getSimpleName();
   private Map<String, RtpSenderWrapper> peers;
   private byte[] configData;
   private volatile boolean configDataReady;
@@ -44,6 +45,7 @@ public class Server extends Service {
   private ArrayBlockingQueue<byte[]> h264BlockingQueue;
   private final Object lock = new Object();
   private final Object configLock = new Object();
+  private Handler mHandler;
 
   public interface Callback {
     void notifyConnectChanged(int num);
@@ -52,8 +54,9 @@ public class Server extends Service {
   @Override
   public void onCreate() {
     super.onCreate();
+    mHandler = new Handler();
     peers = new ConcurrentHashMap<>();
-    h264BlockingQueue = new ArrayBlockingQueue<>(10);
+    h264BlockingQueue = new ArrayBlockingQueue<>(60);
   }
 
   @Override
@@ -89,7 +92,7 @@ public class Server extends Service {
       }
     }
 
-    public void startServer() {
+    public void startPushStream() {
       mExecutorService = Executors.newFixedThreadPool(4);
       mServerTask = new ServerConnectThread();
       mServerTask.start();
@@ -97,10 +100,11 @@ public class Server extends Service {
       mServerSend264Thread.start();
     }
 
-    public void stopServer() {
+    public void stopPushStream() {
       configDataReady = false;
       mServerTask.stopThread();
       mServerSend264Thread.stopThread();
+      h264BlockingQueue.clear();
       synchronized (lock) {
         peers.clear();
       }
@@ -201,6 +205,15 @@ public class Server extends Service {
         RtpSenderWrapper wrapper = new RtpSenderWrapper(ip, CLIENT_DATA_PORT, false);
         synchronized (lock) {
           peers.put(ip, wrapper);
+          if (mCallback != null) {
+            mHandler.post(
+                new Runnable() {
+                  @Override
+                  public void run() {
+                    mCallback.notifyConnectChanged(peers.size());
+                  }
+                });
+          }
         }
         synchronized (configLock) {
           while (!configDataReady) {
@@ -212,14 +225,21 @@ public class Server extends Service {
           }
         }
         mExecutorService.execute(new SendConfigRunnable(ip, configData));
-        if (mCallback != null) mCallback.notifyConnectChanged(peers.size());
       } else if (roomNum == myRoomNumber
           && peers.containsKey(ip)
           && command.equals(Command.DISCONNECT)) {
         synchronized (lock) {
           peers.remove(ip);
+          if (mCallback != null) {
+            mHandler.post(
+                new Runnable() {
+                  @Override
+                  public void run() {
+                    mCallback.notifyConnectChanged(peers.size());
+                  }
+                });
+          }
         }
-        if (mCallback != null) mCallback.notifyConnectChanged(peers.size());
       }
     }
   }

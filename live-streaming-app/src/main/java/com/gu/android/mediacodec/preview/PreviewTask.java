@@ -1,19 +1,18 @@
-package com.gu.android.mediacodec;
+package com.gu.android.mediacodec.preview;
 
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.MediaCodec;
 import android.view.Surface;
 
-import com.gu.android.mediacodec.camera.CameraDevice;
-import com.gu.android.mediacodec.mediacodec.VideoDecoder;
-import com.gu.android.mediacodec.mediacodec.VideoEncoder;
-import com.gu.android.mediacodec.opengl.CodecInputSurface;
-import com.gu.android.mediacodec.opengl.SurfaceTextureManager;
-import com.gu.android.mediacodec.server.Server.ServiceBinder;
+import com.gu.android.mediacodec.preview.camera.CameraDevice;
+import com.gu.android.mediacodec.preview.mediacodec.VideoDecoder;
+import com.gu.android.mediacodec.preview.mediacodec.VideoEncoder;
+import com.gu.android.mediacodec.preview.opengl.CodecInputSurface;
+import com.gu.android.mediacodec.preview.opengl.SurfaceTextureManager;
 import com.gu.rtplibrary.utils.ByteUtil;
 
-public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallback {
+public class PreviewTask extends Thread implements VideoEncoder.EncoderCallback {
 
   private SurfaceTextureManager mStManager;
   private CameraDevice cameraDevice;
@@ -21,13 +20,18 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
   private VideoEncoder mEncoder;
   private VideoDecoder mDecoder;
 
-  private boolean paused;
   private boolean stopLive;
-  private ServiceBinder mServiceBinder;
+  private PreviewCallback mCallback;
   private int previewWidth, previewHeight;
 
-  public LiveStreamTask(Surface outputSurface, ServiceBinder serviceBinder, int width, int height) {
-    this.mServiceBinder = serviceBinder;
+  public interface PreviewCallback {
+    void onDataReady(byte[] data, int offset, int size);
+
+    void onConfigDataReady(byte[] configData);
+  }
+
+  public PreviewTask(Surface outputSurface, PreviewCallback callback, int width, int height) {
+    this.mCallback = callback;
     Camera.Size size = initCamera(width, height);
     previewWidth = size.width;
     previewHeight = size.height;
@@ -41,29 +45,9 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
     return cameraDevice.prepareCamera(width, height);
   }
 
-  public void stopLiveStream() {
+  public void releasePreview() {
     stopLive = true;
-    mServiceBinder = null;
-  }
-
-  public void paused() {
-    paused = true;
-  }
-
-  public void restart() {
-    paused = false;
-  }
-
-  public void triggerStatus() {
-    paused = !paused;
-  }
-
-  public boolean isPaused() {
-    return paused;
-  }
-
-  public boolean isStopLive() {
-    return stopLive;
+    mCallback = null;
   }
 
   @Override
@@ -101,7 +85,7 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
       mEncoder.setCallback(null);
       mDecoder.stop();
       mInputSurface.release();
-      mServiceBinder = null;
+      mCallback = null;
       //      mRtpSenderWrapper.close();
     }
   }
@@ -109,7 +93,7 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
   private void releaseCamera() {
     if (cameraDevice.getCamera() != null) {
       cameraDevice.getCamera().stopPreview();
-      cameraDevice.getCamera().release();
+      cameraDevice.releaseCamera();
     }
   }
 
@@ -131,14 +115,10 @@ public class LiveStreamTask extends Thread implements VideoEncoder.EncoderCallba
       ByteUtil.printByte(config);
       // {,0,0,0,1,103,66,-128,30,-38,2,-128,-10,-128,109,10,19,80,0,0,0,1,104,-50,6,-30}
       mDecoder.configure(previewWidth, previewHeight, config, 0, info.size);
-      if (mServiceBinder != null) mServiceBinder.saveConfigData(config);
-    } else if (!paused) {
-      // pass byte[] to decoder's queue to render asap
-      mDecoder.decodeSample(data, 0, info.size, info.presentationTimeUs, info.flags);
+      if (mCallback != null) mCallback.onConfigDataReady(config);
+    } else if (mCallback != null) {
+      mCallback.onDataReady(data, 0, info.size);
     }
-    if (!paused && mServiceBinder != null) {
-      mServiceBinder.add2BlockingQueue(data, 0, info.size);
-      //        mRtpSenderWrapper.sendAvcPacket(data, 0, info.size, 0);
-    }
+    mDecoder.decodeSample(data, 0, info.size, info.presentationTimeUs, info.flags);
   }
 }

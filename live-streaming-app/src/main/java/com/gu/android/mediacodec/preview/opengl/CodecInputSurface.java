@@ -1,4 +1,4 @@
-package com.gu.android.mediacodec.opengl;
+package com.gu.android.mediacodec.preview.opengl;
 
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;

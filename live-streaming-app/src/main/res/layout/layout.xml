@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -9,25 +10,91 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <LinearLayout
+
+    <Button
+        android:id="@+id/previewBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center|bottom"
-        android:layout_marginBottom="20dp"
-        android:orientation="horizontal">
+        android:layout_centerInParent="true"
+        android:text="@string/start_preview_btn_text" />
 
-        <Button
-            android:id="@+id/startBtn"
+    <TextView
+        android:id="@+id/personNumTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/live_streaming_room_margin_left"
+        android:layout_marginTop="@dimen/live_streaming_room_margin_top"
+        android:background="@drawable/person_num_tv_bg"
+        android:padding="8dp"
+        android:text="@string/person_num_text"
+        android:textColor="#fff"
+        android:visibility="gone" />
+
+
+    <LinearLayout
+        android:id="@+id/playBtnLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginRight="@dimen/live_streaming_room_margin_bottom"
+        android:layout_marginBottom="@dimen/live_streaming_room_margin_bottom"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/playTv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/start_btn_text" />
+            android:text="@string/start_live_stream"
+            android:textColor="#fff"
+            android:textSize="12sp" />
 
-        <Button
-            android:id="@+id/startOrPauseBtn"
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/startOrStopBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:text="@string/resume"
-            android:visibility="gone" />
+            android:layout_marginLeft="2dp"
+            android:src="@drawable/ic_action_videocam"
+            app:backgroundTint="@color/start_color"
+            app:elevation="5dp" />
     </LinearLayout>
-</FrameLayout>
+
+    <TextView
+        android:id="@+id/roomNO_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="@dimen/live_streaming_room_margin_left"
+        android:layout_marginBottom="@dimen/live_streaming_room_margin_bottom"
+        android:text="直播间号：1000"
+        android:textColor="#fff" />
+
+    <LinearLayout
+        android:id="@+id/statusLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="@dimen/live_streaming_room_margin_top"
+        android:layout_marginRight="@dimen/live_streaming_room_margin_left"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/statusImg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/live_streaming_status_level_drawable" />
+
+        <TextView
+            android:id="@+id/statusTv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/previewing"
+            android:textColor="#fff"
+            android:textSize="12sp" />
+    </LinearLayout>
+</RelativeLayout>

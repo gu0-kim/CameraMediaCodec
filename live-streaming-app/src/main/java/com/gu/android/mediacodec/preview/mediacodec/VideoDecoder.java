@@ -1,14 +1,17 @@
-package com.gu.android.mediacodec.mediacodec;
+package com.gu.android.mediacodec.preview.mediacodec;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.os.Build;
 import android.view.Surface;
 
+import com.example.basemodule.data.CodecParams;
+import com.example.basemodule.log.LogUtil;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static com.gu.android.mediacodec.mediacodec.CodecParams.TIMEOUT_SEC;
+import static com.example.basemodule.data.CodecParams.TIMEOUT_SEC;
 
 public class VideoDecoder {
   private DecoderThread mWorker;
@@ -120,6 +123,7 @@ public class VideoDecoder {
         }
       } finally {
         if (mConfigured) {
+          LogUtil.log("VideoDecoder release!");
           mCodec.stop();
           mCodec.release();
         }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="live_streaming_room_margin_left">12dp</dimen>
+    <dimen name="live_streaming_room_margin_top">30dp</dimen>
+    <dimen name="live_streaming_room_margin_bottom">12dp</dimen>
+
+</resources>

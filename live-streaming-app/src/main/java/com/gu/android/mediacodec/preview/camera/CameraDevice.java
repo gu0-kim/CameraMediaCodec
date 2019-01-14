@@ -1,4 +1,4 @@
-package com.gu.android.mediacodec.camera;
+package com.gu.android.mediacodec.preview.camera;
 
 import android.hardware.Camera;
 import android.util.Log;
@@ -34,7 +34,7 @@ public class CameraDevice {
       }
     }
     if (mCamera == null) {
-      Log.d(TAG, "No front-facing camera found; opening default");
+      LogUtil.log(TAG, "No front-facing camera found; opening default");
       mCamera = Camera.open(); // opens first back-facing camera
     }
     if (mCamera == null) {
@@ -50,7 +50,7 @@ public class CameraDevice {
     mCamera.setParameters(params);
 
     Camera.Size size = params.getPreviewSize();
-    Log.d(TAG, "Camera preview size is " + size.width + "x" + size.height);
+    LogUtil.log(TAG, "Camera preview size is " + size.width + "x" + size.height);
     return size;
   }
 
@@ -69,13 +69,13 @@ public class CameraDevice {
     for (Camera.Size size : params.getSupportedPreviewSizes()) {
       LogUtil.log("width=" + size.width + ",height=" + size.height);
       if (size.width == width && size.height == height) {
-        LogUtil.log("完美匹配尺寸,width=" + width + ",height=" + height);
+        LogUtil.log(TAG, "完美匹配尺寸,width=" + width + ",height=" + height);
         params.setPreviewSize(width, height);
         return;
       }
     }
 
-    Log.w(TAG, "Unable to set preview size to " + width + "x" + height);
+    LogUtil.log(TAG, "Unable to set preview size to " + width + "x" + height);
     if (ppsfv != null) {
       params.setPreviewSize(ppsfv.width, ppsfv.height);
     }

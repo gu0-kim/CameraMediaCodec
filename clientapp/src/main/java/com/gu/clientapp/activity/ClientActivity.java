@@ -35,7 +35,7 @@ public class ClientActivity extends AppCompatActivity {
     int ori = mConfiguration.orientation; // 获取屏幕方向
     if (ori == Configuration.ORIENTATION_PORTRAIT) {
       // 竖屏
-      int height = (int) (getScreenWidth() * 0.75);
+      int height = getScreenWidth() / 3 * 2;
       FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) contentLayout.getLayoutParams();
       params.height = height;
       contentLayout.setLayoutParams(params);

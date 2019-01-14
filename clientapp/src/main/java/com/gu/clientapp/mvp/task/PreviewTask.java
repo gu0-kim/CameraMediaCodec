@@ -13,7 +13,7 @@ public class PreviewTask {
   private boolean decoderStart;
 
   public PreviewTask(byte[] configData) {
-    ArrayBlockingQueue<byte[]> dataQueue = new ArrayBlockingQueue<>(20);
+    ArrayBlockingQueue<byte[]> dataQueue = new ArrayBlockingQueue<>(60);
     mSocketClient = new SocketClient(dataQueue);
     mDecoderTask = new DecoderTask(dataQueue, configData);
   }

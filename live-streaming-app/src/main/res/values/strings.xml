@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">MediaCodec</string>
-    <string name="start_btn_text">直播</string>
-    <string name="stop_btn_text">关播</string>
-    <string name="pause">暂停</string>
-    <string name="resume">开始</string>
+    <string name="start_preview_btn_text">开启预览</string>
+    <string name="stop_preview_btn_text">关闭预览</string>
+    <string name="start_live_stream">开播</string>
+    <string name="stop_live_stream">关播</string>
+    <string name="person_num_text">人正在观看</string>
+    <string name="previewing">预览中</string>
+    <string name="living">直播中</string>
 </resources>
