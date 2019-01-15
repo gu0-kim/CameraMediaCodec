@@ -3,5 +3,6 @@
     <color name="person_num_color">#77333333</color>
     <color name="start_color">@android:color/holo_red_dark</color>
     <color name="stop_color">@android:color/holo_green_dark</color>
-    <color name="test">#ffaaaaaa</color>
+    <color name="preview_btn_pre_color">#44888888</color>
+    <color name="preview_btn_nor_color">#44eeeeee</color>
 </resources>

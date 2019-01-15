@@ -16,7 +16,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="@string/start_preview_btn_text" />
+        android:background="@drawable/preview_btn_bg"
+        android:text="@string/start_preview_btn_text"
+        android:textColor="@color/preview_btn_nor_color" />
 
     <TextView
         android:id="@+id/personNumTv"
