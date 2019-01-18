@@ -8,6 +8,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.example.basemodule.data.Command;
+import com.example.basemodule.data.ConfigData;
 import com.example.basemodule.data.PeerData;
 import com.example.basemodule.data.Port;
 import com.example.basemodule.log.LogUtil;
@@ -34,8 +35,9 @@ public class PushStreamServer extends Service {
 
   private static final String TAG = PushStreamServer.class.getSimpleName();
   private Map<String, RtpSenderWrapper> peers;
-  private byte[] configData;
-  private volatile boolean configDataReady;
+  private byte[] videoConfigData;
+  private byte[] audioConfigData;
+  private volatile boolean videoConfigDataReady, audioConfigDataReady;
   private ExecutorService mExecutorService;
   private ServerConnectThread mServerTask;
   private ServerSend264Thread mServerSend264Thread;
@@ -83,11 +85,20 @@ public class PushStreamServer extends Service {
   }
 
   public class ServiceBinder extends Binder {
-    public void saveConfigData(byte[] data) {
+    public void saveVideoConfigData(byte[] data) {
       synchronized (configLock) {
-        configData = new byte[data.length];
-        System.arraycopy(data, 0, configData, 0, data.length);
-        configDataReady = true;
+        videoConfigData = new byte[data.length];
+        System.arraycopy(data, 0, videoConfigData, 0, data.length);
+        videoConfigDataReady = true;
+        configLock.notifyAll();
+      }
+    }
+
+    public void saveAudioConfigData(byte[] data) {
+      synchronized (configLock) {
+        audioConfigData = new byte[data.length];
+        System.arraycopy(data, 0, videoConfigData, 0, data.length);
+        audioConfigDataReady = true;
         configLock.notifyAll();
       }
     }
@@ -101,7 +112,7 @@ public class PushStreamServer extends Service {
     }
 
     public void stopPushStream() {
-      configDataReady = false;
+      videoConfigDataReady = false;
       mServerTask.stopThread();
       mServerSend264Thread.stopThread();
       h264BlockingQueue.clear();
@@ -216,7 +227,7 @@ public class PushStreamServer extends Service {
           }
         }
         synchronized (configLock) {
-          while (!configDataReady) {
+          while (!videoConfigDataReady && !audioConfigDataReady) {
             try {
               configLock.wait();
             } catch (InterruptedException e) {
@@ -224,7 +235,8 @@ public class PushStreamServer extends Service {
             }
           }
         }
-        mExecutorService.execute(new SendConfigRunnable(ip, configData));
+        ConfigData configData = new ConfigData(videoConfigData, audioConfigData);
+        mExecutorService.execute(new SendConfigRunnable(ip, parseConfigData(configData)));
       } else if (roomNum == myRoomNumber
           && peers.containsKey(ip)
           && command.equals(Command.DISCONNECT)) {
@@ -285,6 +297,12 @@ public class PushStreamServer extends Service {
       e.printStackTrace();
     }
     return peerData;
+  }
+
+  private byte[] parseConfigData(ConfigData configData) {
+    Gson gson = new Gson();
+    String str = gson.toJson(configData, ConfigData.class);
+    return str.getBytes();
   }
 
   private void log(String log) {

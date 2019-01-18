@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.view.Surface;
 
+import com.example.basemodule.data.ConfigData;
 import com.example.basemodule.log.LogUtil;
 import com.example.basemodule.utils.inet.INetUtil;
+import com.google.gson.Gson;
 import com.gu.clientapp.mvp.client.contract.ClientContract;
 import com.gu.clientapp.mvp.client.contract.ClientContract.ClientView;
 import com.gu.clientapp.mvp.client.contract.ClientContract.Presenter;
-import com.gu.clientapp.mvp.task.PreviewTask;
+import com.gu.clientapp.mvp.task.PlayTask;
 import com.gu.clientapp.mvp.task.socket.ConnectServerTask;
 
 import java.net.InetAddress;
@@ -25,9 +27,10 @@ import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public class ClientPresenter implements Presenter {
-  private PreviewTask mPreviewTask;
+  private PlayTask mPlayTask;
   private CompositeDisposable mCompositeDisposable;
-  private byte[] configData;
+  private byte[] videoConfigData;
+  private byte[] audioConfigData;
   private volatile boolean connected;
   private final Object lock = new Object();
   private InetAddress broadcastIP;
@@ -67,7 +70,7 @@ public class ClientPresenter implements Presenter {
                   public void accept(Boolean connected) throws Exception {
                     getView().hideProgressBar();
                     if (connected) {
-                      startPreview(surfaceTexture, width, height);
+                      startPlaying(surfaceTexture, width, height);
                     } else {
                       getView().showReconnectBtn();
                     }
@@ -107,10 +110,11 @@ public class ClientPresenter implements Presenter {
   }
 
   @Override
-  public void startPreview(SurfaceTexture surfaceTexture, int width, int height) {
+  public void startPlaying(SurfaceTexture surfaceTexture, int width, int height) {
     LogUtil.log("开始解码");
-    mPreviewTask.configAndStart(new Surface(surfaceTexture), width, height);
-    mPreviewTask.startPreview();
+    mPlayTask.configVideo(new Surface(surfaceTexture), width, height);
+    mPlayTask.configAudio();
+    mPlayTask.startPlaying();
   }
 
   @Override
@@ -130,9 +134,11 @@ public class ClientPresenter implements Presenter {
                 new Consumer<byte[]>() {
                   @Override
                   public void accept(byte[] data) throws Exception {
-                    configData = data;
-                    mPreviewTask = new PreviewTask(configData);
-                    mPreviewTask.startReceiveData();
+                    ConfigData configData = parseFromByteArray(data);
+                    videoConfigData = configData.getVideoConfigData();
+                    audioConfigData = configData.getAudioConfigData();
+                    mPlayTask = new PlayTask(videoConfigData, audioConfigData);
+                    mPlayTask.startReceiveData();
                     notifyConnected();
                   }
                 },
@@ -164,11 +170,13 @@ public class ClientPresenter implements Presenter {
                 new Consumer<byte[]>() {
                   @Override
                   public void accept(byte[] data) throws Exception {
-                    configData = data;
-                    mPreviewTask = new PreviewTask(configData);
-                    mPreviewTask.startReceiveData();
+                    ConfigData configData = parseFromByteArray(data);
+                    videoConfigData = configData.getVideoConfigData();
+                    audioConfigData = configData.getAudioConfigData();
+                    mPlayTask = new PlayTask(videoConfigData, audioConfigData);
+                    mPlayTask.startReceiveData();
                     connected = true;
-                    startPreview(surfaceTexture, width, height);
+                    startPlaying(surfaceTexture, width, height);
                     getView().hideProgressBar();
                     getView().hideReconnectBtn();
                   }
@@ -202,15 +210,15 @@ public class ClientPresenter implements Presenter {
   }
 
   @Override
-  public void stopPreview() {
-    if (mPreviewTask != null) mPreviewTask.stopPreview();
+  public void stopPlaying() {
+    if (mPlayTask != null) mPlayTask.stopPlaying();
   }
 
   @Override
   public void release() {
-    if (mPreviewTask != null) {
-      mPreviewTask.stopReceiveData();
-      mPreviewTask.releasePreview();
+    if (mPlayTask != null) {
+      mPlayTask.stopReceiveData();
+      mPlayTask.release();
     }
     if (!mCompositeDisposable.isDisposed()) mCompositeDisposable.dispose();
     mClientView = null;
@@ -224,5 +232,11 @@ public class ClientPresenter implements Presenter {
   @Override
   public void setView(ClientContract.ClientView clientView) {
     mClientView = clientView;
+  }
+
+  private ConfigData parseFromByteArray(byte[] data) {
+    Gson gson = new Gson();
+    String str = new String(data);
+    return gson.fromJson(str, ConfigData.class);
   }
 }

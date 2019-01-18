@@ -62,12 +62,12 @@ public class VideoDecoder {
       if (mConfigured) {
         throw new IllegalStateException("Decoder is already configured");
       }
-      MediaFormat format = MediaFormat.createVideoFormat(CodecParams.VIDEO_FORMAT, width, height);
+      MediaFormat format = MediaFormat.createVideoFormat(CodecParams.MIME_TYPE_VIDEO_H264, width, height);
       // little tricky here, csd-0 is required in order to configure the codec properly
       // it is basically the first sample from encoder with flag: BUFFER_FLAG_CODEC_CONFIG
       format.setByteBuffer("csd-0", csd0);
       try {
-        mCodec = MediaCodec.createDecoderByType(CodecParams.VIDEO_FORMAT);
+        mCodec = MediaCodec.createDecoderByType(CodecParams.MIME_TYPE_VIDEO_H264);
       } catch (IOException e) {
         throw new RuntimeException("Failed to create codec", e);
       }

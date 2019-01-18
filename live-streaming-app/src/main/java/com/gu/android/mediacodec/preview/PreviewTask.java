@@ -25,9 +25,9 @@ public class PreviewTask extends Thread implements VideoEncoder.EncoderCallback 
   private int previewWidth, previewHeight;
 
   public interface PreviewCallback {
-    void onDataReady(byte[] data, int offset, int size);
+    void onVideoDataReady(byte[] data, int offset, int size);
 
-    void onConfigDataReady(byte[] configData);
+    void onVideoConfigDataReady(byte[] configData);
   }
 
   public PreviewTask(Surface outputSurface, PreviewCallback callback, int width, int height) {
@@ -106,7 +106,7 @@ public class PreviewTask extends Thread implements VideoEncoder.EncoderCallback 
 
   // 编码器编码一帧数据结束回调
   @Override
-  public void onEncoderDataReady(byte[] data, MediaCodec.BufferInfo info) {
+  public void onVideoEncoderDataReady(byte[] data, MediaCodec.BufferInfo info) {
     if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
       // this is the first and only config sample, which contains information about codec
       // like H.264, that let's configure the decoder
@@ -115,9 +115,9 @@ public class PreviewTask extends Thread implements VideoEncoder.EncoderCallback 
       ByteUtil.printByte(config);
       // {,0,0,0,1,103,66,-128,30,-38,2,-128,-10,-128,109,10,19,80,0,0,0,1,104,-50,6,-30}
       mDecoder.configure(previewWidth, previewHeight, config, 0, info.size);
-      if (mCallback != null) mCallback.onConfigDataReady(config);
+      if (mCallback != null) mCallback.onVideoConfigDataReady(config);
     } else if (mCallback != null) {
-      mCallback.onDataReady(data, 0, info.size);
+      mCallback.onVideoDataReady(data, 0, info.size);
     }
     mDecoder.decodeSample(data, 0, info.size, info.presentationTimeUs, info.flags);
   }

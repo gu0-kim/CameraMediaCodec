@@ -124,7 +124,7 @@ public class ClientFragment extends Fragment
   @Override
   public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
     LogUtil.log("des", "onSurfaceTextureDestroyed");
-    presenter.stopPreview();
+    presenter.stopPlaying();
     return false;
   }
 

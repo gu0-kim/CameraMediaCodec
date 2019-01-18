@@ -18,7 +18,7 @@ import static com.example.basemodule.data.CodecParams.TIMEOUT_SEC;
 public class VideoEncoder {
 
   public interface EncoderCallback {
-    void onEncoderDataReady(byte[] data, MediaCodec.BufferInfo info);
+    void onVideoEncoderDataReady(byte[] data, MediaCodec.BufferInfo info);
   }
 
   private CodecInputSurface mCodecInputSurface;
@@ -56,7 +56,7 @@ public class VideoEncoder {
       data.position(info.offset);
       data.limit(info.offset + info.size);
       data.get(mBuffer, 0, info.size);
-      mCallback.onEncoderDataReady(mBuffer, info);
+      mCallback.onVideoEncoderDataReady(mBuffer, info);
     }
   }
 
@@ -167,7 +167,7 @@ public class VideoEncoder {
 
     void prepare() {
       // configure video output
-      MediaFormat format = MediaFormat.createVideoFormat(CodecParams.VIDEO_FORMAT, mWidth, mHeight);
+      MediaFormat format = MediaFormat.createVideoFormat(CodecParams.MIME_TYPE_VIDEO_H264, mWidth, mHeight);
       format.setInteger(
           MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
       format.setInteger(MediaFormat.KEY_BIT_RATE, CodecParams.VIDEO_BITRATE);
@@ -175,7 +175,7 @@ public class VideoEncoder {
       format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, CodecParams.VIDEO_I_FRAME_INTERVAL);
 
       try {
-        mCodec = MediaCodec.createEncoderByType(CodecParams.VIDEO_FORMAT);
+        mCodec = MediaCodec.createEncoderByType(CodecParams.MIME_TYPE_VIDEO_H264);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }

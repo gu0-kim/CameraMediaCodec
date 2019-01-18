@@ -2,13 +2,17 @@ package com.gu.android.mediacodec.mvp.presenter;
 
 import android.view.SurfaceHolder;
 
+import com.gu.android.mediacodec.audio.AudioRecordAndEncodeTask;
 import com.gu.android.mediacodec.mvp.contract.LiveStreamingContract.Presenter;
 import com.gu.android.mediacodec.mvp.contract.LiveStreamingContract.View;
 import com.gu.android.mediacodec.preview.PreviewTask;
 import com.gu.android.mediacodec.service.PushStreamServer;
 
 public class LiveStreamingPresenter
-    implements Presenter, PreviewTask.PreviewCallback, PushStreamServer.Callback {
+    implements Presenter,
+        PreviewTask.PreviewCallback,
+        AudioRecordAndEncodeTask.AudioCallback,
+        PushStreamServer.Callback {
 
   private View mView;
   private boolean previewStarted, liveStreamingStarted;
@@ -79,13 +83,23 @@ public class LiveStreamingPresenter
   }
 
   @Override
-  public void onDataReady(byte[] data, int offset, int size) {
+  public void onVideoDataReady(byte[] data, int offset, int size) {
     getView().getServiceBinder().add2BlockingQueue(data, 0, size);
   }
 
   @Override
-  public void onConfigDataReady(byte[] configData) {
-    getView().getServiceBinder().saveConfigData(configData);
+  public void onVideoConfigDataReady(byte[] configData) {
+    getView().getServiceBinder().saveVideoConfigData(configData);
+  }
+
+  @Override
+  public void onAudioDataReady(byte[] data, int offset, int size) {
+      dd
+  }
+
+  @Override
+  public void onAudioConfigDataReady(byte[] configData) {
+      dd
   }
 
   @Override

@@ -23,9 +23,9 @@ public interface ClientContract {
 
     void try2startPreview(SurfaceTexture surfaceTexture, int width, int height);
 
-    void startPreview(SurfaceTexture surfaceTexture, int width, int height);
+    void startPlaying(SurfaceTexture surfaceTexture, int width, int height);
 
-    void stopPreview();
+    void stopPlaying();
 
     void release();
   }

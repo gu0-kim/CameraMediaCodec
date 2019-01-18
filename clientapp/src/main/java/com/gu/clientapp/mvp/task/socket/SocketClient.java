@@ -13,12 +13,15 @@ import static com.example.basemodule.data.Port.CLIENT_DATA_PORT;
 public class SocketClient extends Thread {
   private DatagramSocket h264Socket;
   private boolean stop;
-  private ArrayBlockingQueue<byte[]> dataQueue;
+  private ArrayBlockingQueue<byte[]> videoDataQueue;
+  private ArrayBlockingQueue<byte[]> audioDataQueue;
   private volatile boolean pauseOffer;
 
-  public SocketClient(ArrayBlockingQueue<byte[]> dataQueue) {
+  public SocketClient(
+      ArrayBlockingQueue<byte[]> videoDataQueue, ArrayBlockingQueue<byte[]> audioDataQueue) {
     socketInit();
-    this.dataQueue = dataQueue;
+    this.videoDataQueue = videoDataQueue;
+    this.audioDataQueue = audioDataQueue;
   }
 
   private void socketInit() {
@@ -42,17 +45,16 @@ public class SocketClient extends Thread {
           DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
           h264Socket.receive(datagramPacket); // 接收数据
           byte[] rtpData = datagramPacket.getData();
-          if (rtpData != null && rtpData[0] == -128 && rtpData[1] == 96 && !pauseOffer) {
-            int l1 = (rtpData[12] << 24) & 0xff000000;
-            int l2 = (rtpData[13] << 16) & 0x00ff0000;
-            int l3 = (rtpData[14] << 8) & 0x0000ff00;
-            int l4 = rtpData[15] & 0x000000FF;
-            h264Length = l1 + l2 + l3 + l4;
-            byte[] rdata = new byte[h264Length];
-            System.arraycopy(rtpData, 16, rdata, 0, h264Length);
-            //          offerDecoder(h264Data, h264Data.length);
+          if (isValidData(rtpData) && !pauseOffer) {
+            h264Length = getPackageLength(rtpData);
+            byte[] copyData = new byte[h264Length];
+            System.arraycopy(rtpData, 16, copyData, 0, h264Length);
             try {
-              dataQueue.put(rdata);
+              if (isVideoData(rtpData)) {
+                videoDataQueue.put(copyData);
+              } else if (isAudioData(rtpData)) {
+                audioDataQueue.put(copyData);
+              }
             } catch (InterruptedException e) {
               e.printStackTrace();
             }
@@ -63,6 +65,26 @@ public class SocketClient extends Thread {
       }
     }
     LogUtil.log("socket thread quit!");
+  }
+
+  private boolean isVideoData(byte[] data) {
+    return data[1] == 96;
+  }
+
+  private boolean isAudioData(byte[] data) {
+    return data[1] == 97;
+  }
+
+  private boolean isValidData(byte[] data) {
+    return data != null && data[0] == -128;
+  }
+
+  private int getPackageLength(byte[] data) {
+    int l1 = (data[12] << 24) & 0xff000000;
+    int l2 = (data[13] << 16) & 0x00ff0000;
+    int l3 = (data[14] << 8) & 0x0000ff00;
+    int l4 = data[15] & 0x000000FF;
+    return l1 + l2 + l3 + l4;
   }
 
   public void stopSocket() {
@@ -81,7 +103,7 @@ public class SocketClient extends Thread {
   public void setPauseOffer(boolean pause) {
     pauseOffer = pause;
     if (pause) {
-      dataQueue.clear();
+      videoDataQueue.clear();
     }
   }
 }
