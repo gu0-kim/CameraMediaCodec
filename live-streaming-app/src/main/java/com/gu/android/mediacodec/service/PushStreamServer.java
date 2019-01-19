@@ -25,7 +25,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.example.basemodule.data.Port.CLIENT_CONNECT_PORT;
 import static com.example.basemodule.data.Port.CLIENT_DATA_PORT;
@@ -40,11 +39,11 @@ public class PushStreamServer extends Service {
   private volatile boolean videoConfigDataReady, audioConfigDataReady;
   private ExecutorService mExecutorService;
   private ServerConnectThread mServerTask;
-  private ServerSend264Thread mServerSend264Thread;
+  private ServerSendDataThread mServerSendDataThread;
   private int myRoomNumber = RESERVED;
   private static final int RESERVED = -1;
   private Callback mCallback;
-  private ArrayBlockingQueue<byte[]> h264BlockingQueue;
+  private ArrayBlockingQueue<byte[]> videoDataQueue, audioDataQueue;
   private final Object lock = new Object();
   private final Object configLock = new Object();
   private Handler mHandler;
@@ -58,7 +57,8 @@ public class PushStreamServer extends Service {
     super.onCreate();
     mHandler = new Handler();
     peers = new ConcurrentHashMap<>();
-    h264BlockingQueue = new ArrayBlockingQueue<>(60);
+    videoDataQueue = new ArrayBlockingQueue<>(60);
+    audioDataQueue = new ArrayBlockingQueue<>(60);
   }
 
   @Override
@@ -72,9 +72,10 @@ public class PushStreamServer extends Service {
     closeClientSocket();
     peers.clear();
     mServerTask.stopThread();
-    mServerSend264Thread.stopThread();
+    mServerSendDataThread.stopThread();
     mCallback = null;
-    h264BlockingQueue.clear();
+    videoDataQueue.clear();
+    audioDataQueue.clear();
   }
 
   private void closeClientSocket() {
@@ -97,7 +98,7 @@ public class PushStreamServer extends Service {
     public void saveAudioConfigData(byte[] data) {
       synchronized (configLock) {
         audioConfigData = new byte[data.length];
-        System.arraycopy(data, 0, videoConfigData, 0, data.length);
+        System.arraycopy(data, 0, audioConfigData, 0, data.length);
         audioConfigDataReady = true;
         configLock.notifyAll();
       }
@@ -107,15 +108,16 @@ public class PushStreamServer extends Service {
       mExecutorService = Executors.newFixedThreadPool(4);
       mServerTask = new ServerConnectThread();
       mServerTask.start();
-      mServerSend264Thread = new ServerSend264Thread();
-      mServerSend264Thread.start();
+      mServerSendDataThread = new ServerSendDataThread();
+      mServerSendDataThread.start();
     }
 
     public void stopPushStream() {
       videoConfigDataReady = false;
       mServerTask.stopThread();
-      mServerSend264Thread.stopThread();
-      h264BlockingQueue.clear();
+      mServerSendDataThread.stopThread();
+      videoDataQueue.clear();
+      audioDataQueue.clear();
       synchronized (lock) {
         peers.clear();
       }
@@ -133,33 +135,37 @@ public class PushStreamServer extends Service {
       mCallback = callback;
     }
 
-    public void add2BlockingQueue(byte[] data, int offset, int length) {
+    public void add2VideoQueue(byte[] data, int offset, int length) {
       byte[] h264 = new byte[length];
       System.arraycopy(data, offset, h264, 0, length);
-      h264BlockingQueue.offer(h264);
+      videoDataQueue.offer(h264);
+    }
+
+    public void add2AudioQueue(byte[] data, int offset, int length) {
+      byte[] audioData = new byte[length];
+      System.arraycopy(data, offset, audioData, 0, length);
+      audioDataQueue.offer(audioData);
     }
   }
 
-  private class ServerSend264Thread extends Thread {
+  private class ServerSendDataThread extends Thread {
     private boolean stop;
 
     @Override
     public void run() {
       while (true) {
-        try {
-          byte[] sendByte = h264BlockingQueue.poll(100, TimeUnit.MILLISECONDS);
-          if (stop) break;
-          if (sendByte == null) continue;
-          synchronized (lock) {
-            for (String ip : peers.keySet()) {
-              RtpSenderWrapper wrapper = peers.get(ip);
-              if (wrapper != null) {
-                wrapper.sendAvcPacket(sendByte, 0, sendByte.length, 0);
-              }
+        byte[] videoData = videoDataQueue.poll();
+        byte[] audioData = audioDataQueue.poll();
+        if (stop) break;
+        if (videoData == null && audioData == null) continue;
+        synchronized (lock) {
+          for (String ip : peers.keySet()) {
+            RtpSenderWrapper wrapper = peers.get(ip);
+            if (wrapper != null) {
+              if (videoData != null) wrapper.sendAvcPacket(videoData, 0, videoData.length, 0);
+              if (audioData != null) wrapper.sendAacPacket(audioData, 0, audioData.length, 0);
             }
           }
-        } catch (InterruptedException e) {
-          e.printStackTrace();
         }
       }
     }

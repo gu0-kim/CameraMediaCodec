@@ -2,21 +2,22 @@ package com.gu.android.mediacodec.mvp.presenter;
 
 import android.view.SurfaceHolder;
 
-import com.gu.android.mediacodec.audio.AudioRecordAndEncodeTask;
+import com.gu.android.mediacodec.audio.AudioTask;
 import com.gu.android.mediacodec.mvp.contract.LiveStreamingContract.Presenter;
 import com.gu.android.mediacodec.mvp.contract.LiveStreamingContract.View;
-import com.gu.android.mediacodec.preview.PreviewTask;
+import com.gu.android.mediacodec.video.PreviewTask;
 import com.gu.android.mediacodec.service.PushStreamServer;
 
 public class LiveStreamingPresenter
     implements Presenter,
         PreviewTask.PreviewCallback,
-        AudioRecordAndEncodeTask.AudioCallback,
+        AudioTask.AudioCallback,
         PushStreamServer.Callback {
 
   private View mView;
   private boolean previewStarted, liveStreamingStarted;
   private PreviewTask mPreviewTask;
+  private AudioTask mAudioTask;
 
   @Override
   public View getView() {
@@ -37,6 +38,8 @@ public class LiveStreamingPresenter
               holder.getSurface(), this, getView().getPreviewWidth(), getView().getPreviewHeight());
       mPreviewTask.start();
       previewStarted = true;
+      mAudioTask = new AudioTask(this);
+      mAudioTask.start();
       getView().showPreviewing();
     }
   }
@@ -45,6 +48,7 @@ public class LiveStreamingPresenter
   public void stopPreview() {
     if (isPreviewStarted()) {
       mPreviewTask.releasePreview();
+      mAudioTask.release();
       getView().showIdle();
       previewStarted = false;
     }
@@ -84,7 +88,7 @@ public class LiveStreamingPresenter
 
   @Override
   public void onVideoDataReady(byte[] data, int offset, int size) {
-    getView().getServiceBinder().add2BlockingQueue(data, 0, size);
+    getView().getServiceBinder().add2VideoQueue(data, offset, size);
   }
 
   @Override
@@ -94,12 +98,12 @@ public class LiveStreamingPresenter
 
   @Override
   public void onAudioDataReady(byte[] data, int offset, int size) {
-      dd
+    getView().getServiceBinder().add2AudioQueue(data, offset, size);
   }
 
   @Override
   public void onAudioConfigDataReady(byte[] configData) {
-      dd
+    getView().getServiceBinder().saveAudioConfigData(configData);
   }
 
   @Override

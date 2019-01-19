@@ -1,4 +1,4 @@
-package com.gu.android.mediacodec.preview.opengl;
+package com.gu.android.mediacodec.video.opengl;
 
 import android.graphics.SurfaceTexture;
 

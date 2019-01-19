@@ -1,4 +1,4 @@
-package com.gu.android.mediacodec.preview.mediacodec;
+package com.gu.android.mediacodec.video.mediacodec;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;

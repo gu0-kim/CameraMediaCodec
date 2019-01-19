@@ -1,6 +1,6 @@
 package com.gu.android.mediacodec.audio;
 
-public class AudioRecordAndEncodeTask extends Thread
+public class AudioTask extends Thread
     implements AudioRecorderDevice.AudioRecorderCallback, AudioEncoder.AudioEncoderDataCallback {
 
   private AudioRecorderDevice mRecorderDevice;
@@ -13,7 +13,7 @@ public class AudioRecordAndEncodeTask extends Thread
     void onAudioConfigDataReady(byte[] configData);
   }
 
-  public AudioRecordAndEncodeTask(AudioCallback callback) {
+  public AudioTask(AudioCallback callback) {
     mCallback = callback;
     mRecorderDevice = new AudioRecorderDevice(this);
     mAudioEncoder = new AudioEncoder(this);

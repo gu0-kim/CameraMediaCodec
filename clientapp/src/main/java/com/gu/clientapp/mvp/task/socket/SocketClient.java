@@ -11,7 +11,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import static com.example.basemodule.data.Port.CLIENT_DATA_PORT;
 
 public class SocketClient extends Thread {
-  private DatagramSocket h264Socket;
+  private DatagramSocket dataSocket;
   private boolean stop;
   private ArrayBlockingQueue<byte[]> videoDataQueue;
   private ArrayBlockingQueue<byte[]> audioDataQueue;
@@ -26,9 +26,9 @@ public class SocketClient extends Thread {
 
   private void socketInit() {
     try {
-      h264Socket = new DatagramSocket(CLIENT_DATA_PORT); // 端口号
-      h264Socket.setReuseAddress(true);
-      h264Socket.setBroadcast(false);
+      dataSocket = new DatagramSocket(CLIENT_DATA_PORT); // 端口号
+      dataSocket.setReuseAddress(true);
+      dataSocket.setBroadcast(false);
     } catch (SocketException e) {
       e.printStackTrace();
     }
@@ -37,18 +37,18 @@ public class SocketClient extends Thread {
   @Override
   public void run() {
     byte[] data = new byte[80000];
-    int h264Length;
+    int dataLength;
 
     while (!stop) {
-      if (h264Socket != null) {
+      if (dataSocket != null) {
         try {
           DatagramPacket datagramPacket = new DatagramPacket(data, data.length);
-          h264Socket.receive(datagramPacket); // 接收数据
+          dataSocket.receive(datagramPacket); // 接收数据
           byte[] rtpData = datagramPacket.getData();
           if (isValidData(rtpData) && !pauseOffer) {
-            h264Length = getPackageLength(rtpData);
-            byte[] copyData = new byte[h264Length];
-            System.arraycopy(rtpData, 16, copyData, 0, h264Length);
+            dataLength = getPackageLength(rtpData);
+            byte[] copyData = new byte[dataLength];
+            System.arraycopy(rtpData, 16, copyData, 0, dataLength);
             try {
               if (isVideoData(rtpData)) {
                 videoDataQueue.put(copyData);
@@ -89,9 +89,9 @@ public class SocketClient extends Thread {
 
   public void stopSocket() {
     stop = true;
-    if (h264Socket != null) {
-      h264Socket.close();
-      h264Socket = null;
+    if (dataSocket != null) {
+      dataSocket.close();
+      dataSocket = null;
     }
   }
 

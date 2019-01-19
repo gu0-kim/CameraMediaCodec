@@ -1,15 +1,15 @@
-package com.gu.android.mediacodec.preview;
+package com.gu.android.mediacodec.video;
 
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.MediaCodec;
 import android.view.Surface;
 
-import com.gu.android.mediacodec.preview.camera.CameraDevice;
-import com.gu.android.mediacodec.preview.mediacodec.VideoDecoder;
-import com.gu.android.mediacodec.preview.mediacodec.VideoEncoder;
-import com.gu.android.mediacodec.preview.opengl.CodecInputSurface;
-import com.gu.android.mediacodec.preview.opengl.SurfaceTextureManager;
+import com.gu.android.mediacodec.video.camera.CameraDevice;
+import com.gu.android.mediacodec.video.mediacodec.VideoDecoder;
+import com.gu.android.mediacodec.video.mediacodec.VideoEncoder;
+import com.gu.android.mediacodec.video.opengl.CodecInputSurface;
+import com.gu.android.mediacodec.video.opengl.SurfaceTextureManager;
 import com.gu.rtplibrary.utils.ByteUtil;
 
 public class PreviewTask extends Thread implements VideoEncoder.EncoderCallback {

@@ -1,4 +1,4 @@
-package com.gu.android.mediacodec.preview.mediacodec;
+package com.gu.android.mediacodec.video.mediacodec;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -8,7 +8,7 @@ import android.view.Surface;
 
 import com.example.basemodule.data.CodecParams;
 import com.example.basemodule.log.LogUtil;
-import com.gu.android.mediacodec.preview.opengl.CodecInputSurface;
+import com.gu.android.mediacodec.video.opengl.CodecInputSurface;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
