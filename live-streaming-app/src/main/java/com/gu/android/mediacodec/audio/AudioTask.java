@@ -26,12 +26,12 @@ public class AudioTask extends Thread
 
   @Override
   public void onAudioConfigDataReady(byte[] configData) {
-    mCallback.onAudioConfigDataReady(configData);
+    if (mCallback != null) mCallback.onAudioConfigDataReady(configData);
   }
 
   @Override
   public void onAudioEncoderDataReady(byte[] data) {
-    mCallback.onAudioDataReady(data, 0, data.length);
+    if (mCallback != null) mCallback.onAudioDataReady(data, 0, data.length);
   }
 
   @Override

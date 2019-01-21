@@ -5,4 +5,9 @@
     <color name="stop_color">@android:color/holo_green_dark</color>
     <color name="preview_btn_pre_color">#44888888</color>
     <color name="preview_btn_nor_color">#44eeeeee</color>
+    <color name="background_color">#f15a25</color>
+    <color name="toolbar_color">#f94b0e</color>
+    <color name="edittext_hint_color">#33cccccc</color>
+    <color name="btn_blue_nor_color">#ff6633</color>
+    <color name="btn_blue_pre_color">#ff6600</color>
 </resources>

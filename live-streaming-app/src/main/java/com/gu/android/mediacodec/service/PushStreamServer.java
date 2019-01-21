@@ -71,8 +71,8 @@ public class PushStreamServer extends Service {
     super.onDestroy();
     closeClientSocket();
     peers.clear();
-    mServerTask.stopThread();
-    mServerSendDataThread.stopThread();
+    if (mServerTask != null) mServerTask.stopThread();
+    if (mServerSendDataThread != null) mServerSendDataThread.stopThread();
     mCallback = null;
     videoDataQueue.clear();
     audioDataQueue.clear();
@@ -114,8 +114,8 @@ public class PushStreamServer extends Service {
 
     public void stopPushStream() {
       videoConfigDataReady = false;
-      mServerTask.stopThread();
-      mServerSendDataThread.stopThread();
+      if (mServerTask != null) mServerTask.stopThread();
+      if (mServerSendDataThread != null) mServerSendDataThread.stopThread();
       videoDataQueue.clear();
       audioDataQueue.clear();
       synchronized (lock) {
