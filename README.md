@@ -1,2 +1,14 @@
-# CameraMediaCodec
-Camera data --> opengl surfaceTexture --> mediaCodec encoder inputSurface --> mediaCodec decoder -->SurfaceView
+# 局域网的直播APP
+一个mediacodec硬解码的直播app，包括主播端和客户端。
+
+主播端进行视频和音频的采集，然后对视频和音频进行硬编码，使用udp在局域网内推流到客户端。
+
+客户端对推送过来的视频流和音频流分别进行解码，然后显示。
+## live-stream-app
+主播端
+
+主播设置直播间号->进入直播间->开启预览->开播
+## clientapp
+客户端
+
+用户输入想要看的直播间号->去他的直播间->看直播
