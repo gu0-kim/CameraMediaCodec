@@ -64,6 +64,7 @@ public class ConnectServerTask {
   }
 
   public void disconnectLiveRoom() {
+    LogUtil.log("dis", "disconnectLiveRoom");
     DatagramSocket socket = null;
     try {
       socket = new DatagramSocket(Port.CLIENT_CONNECT_PORT, localIp);

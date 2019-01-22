@@ -44,10 +44,12 @@ public class ClientFragment extends Fragment
   SurfaceTexture availableSurface;
   int width, height;
 
-  public static ClientFragment newInstance(String tag) {
+  private int roomNo;
+
+  public static ClientFragment newInstance(String roomNo) {
     ClientFragment fragment = new ClientFragment();
     Bundle data = new Bundle();
-    data.putString("key", tag);
+    data.putString("roomNo", roomNo);
     fragment.setArguments(data);
     return fragment;
   }
@@ -69,17 +71,18 @@ public class ClientFragment extends Fragment
     super.onCreate(savedInstanceState);
     // 保证屏幕旋转不重建fragment
     setRetainInstance(true);
+    roomNo = Integer.valueOf(getArguments().getString("roomNo"));
     presenter = new ClientPresenter();
     presenter.setView(this);
     presenter.onCreate(mActivity);
-    presenter.connect2LiveRoom();
+    presenter.connect2LiveRoom(roomNo);
   }
 
   @OnClick(R.id.reconnectBtn)
   public void onClickedReconnectBtn() {
     showProgressBar();
     hideReconnectBtn();
-    presenter.reConnect2LiveRoom(availableSurface, width, height);
+    presenter.reConnect2LiveRoom(roomNo, availableSurface, width, height);
   }
 
   @Nullable
@@ -103,7 +106,7 @@ public class ClientFragment extends Fragment
   @Override
   public void onDestroy() {
     super.onDestroy();
-    presenter.disconnect2LiveRoom();
+    presenter.disconnect2LiveRoom(roomNo);
     presenter.release();
     unbinder.unbind();
     unbinder = null;

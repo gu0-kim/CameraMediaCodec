@@ -21,7 +21,7 @@
         </activity>
         <activity
             android:name="com.gu.android.mediacodec.activity.RenderActivity"
-            android:screenOrientation="landscape"></activity>
+            android:screenOrientation="landscape" />
 
         <service android:name=".service.PushStreamServer" />
     </application>

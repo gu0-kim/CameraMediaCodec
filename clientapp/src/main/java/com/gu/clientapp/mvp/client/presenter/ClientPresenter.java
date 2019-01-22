@@ -118,15 +118,15 @@ public class ClientPresenter implements Presenter {
   }
 
   @Override
-  public void connect2LiveRoom() {
+  public void connect2LiveRoom(final int roomNo) {
     mCompositeDisposable.add(
-        Observable.just(1000)
+        Observable.just(roomNo)
             .observeOn(Schedulers.newThread())
             .map(
                 new Function<Integer, byte[]>() {
                   @Override
                   public byte[] apply(Integer integer) throws Exception {
-                    ConnectServerTask task = createConnectTask();
+                    ConnectServerTask task = createConnectTask(roomNo);
                     return task.start2Connect();
                   }
                 })
@@ -153,15 +153,15 @@ public class ClientPresenter implements Presenter {
 
   @Override
   public void reConnect2LiveRoom(
-      final SurfaceTexture surfaceTexture, final int width, final int height) {
+      int roomNo, final SurfaceTexture surfaceTexture, final int width, final int height) {
     mCompositeDisposable.add(
-        Observable.just(1000)
+        Observable.just(roomNo)
             .observeOn(Schedulers.newThread())
             .map(
                 new Function<Integer, byte[]>() {
                   @Override
-                  public byte[] apply(Integer integer) throws Exception {
-                    ConnectServerTask task = createConnectTask();
+                  public byte[] apply(Integer roomNo) throws Exception {
+                    ConnectServerTask task = createConnectTask(roomNo);
                     return task.start2Connect();
                   }
                 })
@@ -191,22 +191,22 @@ public class ClientPresenter implements Presenter {
   }
 
   @Override
-  public void disconnect2LiveRoom() {
+  public void disconnect2LiveRoom(int roomNo) {
     mCompositeDisposable.add(
-        Observable.just(1000)
+        Observable.just(roomNo)
             .observeOn(Schedulers.newThread())
             .subscribe(
                 new Consumer<Integer>() {
                   @Override
-                  public void accept(Integer integer) throws Exception {
-                    createConnectTask().disconnectLiveRoom();
+                  public void accept(Integer roomNo) throws Exception {
+                    createConnectTask(roomNo).disconnectLiveRoom();
                   }
                 }));
   }
 
   @Override
-  public ConnectServerTask createConnectTask() throws Exception {
-    return new ConnectServerTask(1000, "gu", broadcastIP, localIp);
+  public ConnectServerTask createConnectTask(int roomNo) throws Exception {
+    return new ConnectServerTask(roomNo, "gu", broadcastIP, localIp);
   }
 
   @Override

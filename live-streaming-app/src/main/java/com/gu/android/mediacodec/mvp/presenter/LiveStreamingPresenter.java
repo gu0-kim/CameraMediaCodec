@@ -5,8 +5,8 @@ import android.view.SurfaceHolder;
 import com.gu.android.mediacodec.audio.AudioTask;
 import com.gu.android.mediacodec.mvp.contract.LiveStreamingContract.Presenter;
 import com.gu.android.mediacodec.mvp.contract.LiveStreamingContract.View;
-import com.gu.android.mediacodec.video.PreviewTask;
 import com.gu.android.mediacodec.service.PushStreamServer;
+import com.gu.android.mediacodec.video.PreviewTask;
 
 public class LiveStreamingPresenter
     implements Presenter,
@@ -49,7 +49,7 @@ public class LiveStreamingPresenter
     if (isPreviewStarted()) {
       mPreviewTask.releasePreview();
       mAudioTask.release();
-      getView().showIdle();
+      if (getView() != null) getView().showIdle();
       previewStarted = false;
     }
   }

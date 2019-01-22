@@ -27,4 +27,7 @@ dependencies {
     implementation project(':rtplibrary')
     implementation project(':basemodule')
     implementation 'com.android.support:design:28.0.0'
+    implementation 'com.yanzhenjie:permission:2.0.0-rc12'
+    implementation 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
+    implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.1.1'
 }

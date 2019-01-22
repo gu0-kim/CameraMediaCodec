@@ -13,13 +13,14 @@ public interface ClientContract {
 
     void onCreate(Activity activity);
 
-    void connect2LiveRoom();
+    void connect2LiveRoom(int roomNo);
 
-    void reConnect2LiveRoom(final SurfaceTexture surfaceTexture, final int width, final int height);
+    void reConnect2LiveRoom(
+        int roomNo, final SurfaceTexture surfaceTexture, final int width, final int height);
 
-    void disconnect2LiveRoom();
+    void disconnect2LiveRoom(int roomNo);
 
-    ConnectServerTask createConnectTask() throws Exception;
+    ConnectServerTask createConnectTask(int roomNo) throws Exception;
 
     void try2startPreview(SurfaceTexture surfaceTexture, int width, int height);
 

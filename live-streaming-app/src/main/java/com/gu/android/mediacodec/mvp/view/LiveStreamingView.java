@@ -74,6 +74,11 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
   @BindView(R.id.playBtnLayout)
   LinearLayout playBtnLayout;
 
+  @BindView(R.id.roomNO_tv)
+  TextView roomNO_tv;
+
+  private String roomNo;
+
   @BindColor(R.color.start_color)
   int startColor;
 
@@ -98,7 +103,7 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
           mServiceBinder = (ServiceBinder) service;
-          mServiceBinder.setRoomNumber(1000);
+          mServiceBinder.setRoomNumber(Integer.valueOf(roomNo));
         }
 
         @Override
@@ -126,7 +131,7 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
   public static LiveStreamingView newInstance(String tag) {
     LiveStreamingView fragment = new LiveStreamingView();
     Bundle data = new Bundle();
-    data.putString("key", tag);
+    data.putString("roomNo", tag);
     fragment.setArguments(data);
     return fragment;
   }
@@ -155,6 +160,8 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
     mPresenter.setView(this);
     getSurfaceViewSize();
     mSurfaceView.getHolder().addCallback(this);
+    roomNo = getArguments().getString("roomNo");
+    roomNO_tv.setText(String.format(Locale.getDefault(), "直播间号：%s", roomNo));
     Intent service = new Intent(mActivity, PushStreamServer.class);
     mActivity.bindService(service, mServiceConnection, BIND_AUTO_CREATE);
     return parent;
@@ -167,6 +174,7 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
     mPresenter.release();
     unbinder.unbind();
     unbinder = null;
+    LogUtil.log("onDestroyView");
   }
 
   @Override
@@ -191,13 +199,13 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
     playTv.setText(R.string.start_live_stream);
     personNumTv.setVisibility(android.view.View.GONE);
     statusLayout.setVisibility(android.view.View.GONE);
-    startOrStopBtn.setBackgroundTintList(getColorStateListTest(startColor));
+    startOrStopBtn.setBackgroundTintList(getColorStateList(startColor));
     startOrStopBtn.setImageResource(R.drawable.ic_action_videocam);
   }
 
   @Override
   public void showStartLiveStreaming() {
-    startOrStopBtn.setBackgroundTintList(getColorStateListTest(stopColor));
+    startOrStopBtn.setBackgroundTintList(getColorStateList(stopColor));
     startOrStopBtn.setImageResource(R.drawable.ic_action_videocam_off);
     personNumTv.setVisibility(android.view.View.VISIBLE);
     updateRoomPeopleNumber(0);
@@ -275,7 +283,7 @@ public class LiveStreamingView extends Fragment implements View, SurfaceHolder.C
     return mServiceBinder;
   }
 
-  private ColorStateList getColorStateListTest(int color) {
+  private ColorStateList getColorStateList(int color) {
     int[] colors = new int[] {color, color, color, color};
     return new ColorStateList(states, colors);
   }

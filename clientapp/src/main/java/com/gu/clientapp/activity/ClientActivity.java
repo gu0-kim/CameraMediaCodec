@@ -14,6 +14,7 @@ import com.gu.clientapp.mvp.client.view.ClientFragment;
 public class ClientActivity extends AppCompatActivity {
   ClientFragment fragment;
   private FrameLayout contentLayout;
+  private int roomNo;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -21,11 +22,11 @@ public class ClientActivity extends AppCompatActivity {
     setContentView(R.layout.main);
     contentLayout = findViewById(R.id.content_layout);
     ifPortraitResize();
+    roomNo = getIntent().getIntExtra("roomNo", 0);
     FragmentManager fragmentManager = getSupportFragmentManager();
     fragment = (ClientFragment) fragmentManager.findFragmentById(R.id.content_layout);
     if (fragment == null) {
-      String tag = "client";
-      fragment = ClientFragment.newInstance(tag);
+      fragment = ClientFragment.newInstance(String.valueOf(roomNo));
       fragmentManager.beginTransaction().add(R.id.content_layout, fragment).commit();
     }
   }
